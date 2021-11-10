@@ -1,0 +1,13 @@
+.chat {
+    height: 100vh;
+    width: 360px;
+    border-right: 1px solid #555;
+    /*
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    flex-grow: 1;
+    */
+}
