@@ -1,13 +1,35 @@
 .chat {
     height: 100vh;
     width: 360px;
-    border-right: 1px solid #555;
-    /*
+    border-right: 1px solid #333;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    /*flex-grow: 1;*/
+}
 
-    flex-grow: 1;
-    */
+.chat-header {
+    background-color:teal;
+    height: 100px;
+    padding: 5px;
+}
+
+.chatbox {
+    background-color:lightslategray;
+    height: 100%;
+    padding: 5px;
+}
+
+.chatbox-inner {
+    background-color:lightsteelblue;
+    height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    border-radius: 5px;
+}
+
+.chat-input {
+    background-color:teal;
+    height: 60px;
+    padding: 5px;
 }
