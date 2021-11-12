@@ -5,7 +5,9 @@ module.exports = {
     // client -> server
     SOCKET_POKE: 'poke',
     SOCKET_JOIN: 'join',
+    SOCKET_START: 'start',
     // server -> client
     SOCKET_PLAYERS: 'players',
+    SOCKET_STARTED: 'started',
     SOCKET_STATUS: 'status'
 };

@@ -5,31 +5,29 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /*flex-grow: 1;*/
+    background-color:teal;
 }
 
 .chat-header {
-    background-color:teal;
+
     height: 100px;
     padding: 5px;
 }
 
 .chatbox {
-    background-color:lightslategray;
-    height: 100%;
-    padding: 5px;
-}
-
-.chatbox-inner {
-    background-color:lightsteelblue;
+    background-color:#eee;
+    color: black;
     height: 100%;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
+    justify-content: flex-end;
     border-radius: 5px;
+    padding: 5px;
+    margin: 5px;
+    overflow-y: auto; /*I want this to scroll...*/
 }
 
 .chat-input {
-    background-color:teal;
     height: 60px;
     padding: 5px;
 }

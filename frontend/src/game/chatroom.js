@@ -1,6 +1,18 @@
+import React, { useEffect, useState } from 'react';
 import './chatroom.css';
+const Constants = require('../util/constants');
+const socket = require('../connections/socket').socket;
 
-const ChatRoom = () => {
+const ChatRoom = ({myName}) => {
+
+    const [chats, setChats] = useState([]);
+
+    useEffect(() => {
+        socket.on(Constants.SOCKET_STATUS, data => {
+            setChats(chats => [...chats, data.message]);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
 
     return (
         <div className="chat">
@@ -8,13 +20,12 @@ const ChatRoom = () => {
                 Robo Rally
             </div>
             <div className="chatbox">
-                <div className="chatbox-inner">
-                    <span>chatbox</span>
-                    <span>yo</span>
-                </div>
+                {chats.map(function(chat, index) {
+                    return <span key={index}>{chat}</span>;
+                })}
             </div>
             <div className="chat-input">
-                input
+                {myName}
             </div>
         </div>
     );

@@ -13,6 +13,7 @@ const clientConnected = (sio, client) => {
     client.on(Constants.DISCONNECT, playerDisconnected);
     client.on(Constants.SOCKET_JOIN, playerJoined);
     client.on(Constants.SOCKET_POKE, poked);
+    client.on(Constants.SOCKET_START, startGame);
     sendStatus(client, 'Connected!');
 };
 
@@ -70,6 +71,11 @@ function broadcastStatus(message) {
 
 function updatePlayers() {
     io.sockets.in(gameId).emit(Constants.SOCKET_PLAYERS, { players: JSON.stringify(Array.from(players)) });
+}
+
+function startGame() {
+    io.sockets.in(gameId).emit(Constants.SOCKET_STARTED, { data: 'tbd' });
+    broadcastStatus('Game started!');
 }
 
 exports.clientConnected = clientConnected;
