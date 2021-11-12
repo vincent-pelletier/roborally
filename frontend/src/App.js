@@ -6,21 +6,21 @@ import MainPanel from './game/mainpanel';
 
 const App = () => {
 
-  const [finalName, setFinalName] = useState('');
+    const [finalName, setFinalName] = useState('');
 
-  return (
-    <div className="app">
-      <Router>
-        <Switch>
-          <Route path="/" exact>
-            <ChatRoom myName={finalName}/>
-            <MainPanel updateName={setFinalName}/>
-          </Route>
-          <Redirect to="/"/>
-        </Switch>
-      </Router>
-    </div>
-  );
+    return (
+        <div className="app">
+            <Router>
+            <Switch>
+                <Route path="/" exact>
+                <ChatRoom myName={finalName}/>
+                <MainPanel updateName={setFinalName}/>
+                </Route>
+                <Redirect to="/"/>
+            </Switch>
+            </Router>
+        </div>
+    );
 }
 
 export default App;

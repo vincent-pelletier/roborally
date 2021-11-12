@@ -22,51 +22,51 @@ const MainPanel = ({updateName}) => {
     const [playAudioJoin] = useSound(audioJoin);
 
     useEffect(() => {
-      socket.on(Constants.SOCKET_STATUS, data => {
-        setStatus(data.message);
-      });
+        socket.on(Constants.SOCKET_STATUS, data => {
+            setStatus(data.message);
+        });
 
-      socket.on(Constants.SOCKET_PLAYERS, data => {
-        var localPlayers = {};
-        for(var p of JSON.parse(data.players)) {
-          localPlayers[p[0]] = {
-            id: p[0],
-            name: p[1],
-            self: p[0] === socket.id
-          };
-        }
-        console.log('Players : ' + Object.values(localPlayers).map(p => p.name));
-        setPlayers({...localPlayers});
+        socket.on(Constants.SOCKET_PLAYERS, data => {
+            var localPlayers = {};
+            for(var p of JSON.parse(data.players)) {
+                localPlayers[p[0]] = {
+                    id: p[0],
+                    name: p[1],
+                    self: p[0] === socket.id
+                };
+            }
+            console.log('Players : ' + Object.values(localPlayers).map(p => p.name));
+            setPlayers({...localPlayers});
 
-        const playerValues = Object.values(localPlayers);
-        setCanStart(playerValues.length === maxPlayers && playerValues[0]['self']);
+            const playerValues = Object.values(localPlayers);
+            setCanStart(playerValues.length === maxPlayers && playerValues[0]['self']);
 
-        const prev = stateRef.current;
-        if(playerValues.length > prev) {
-            // sound
-            console.log('++');
-        } else if (playerValues.length < prev) {
-            // sound
-            console.log('--');
-        }
-        setPrevPlayerCount(playerValues.length);
-      });
+            const prev = stateRef.current;
+            if(playerValues.length > prev) {
+                // sound
+                console.log('++');
+            } else if (playerValues.length < prev) {
+                // sound
+                console.log('--');
+            }
+            setPrevPlayerCount(playerValues.length);
+        });
 
-      socket.on(Constants.SOCKET_STARTED, data => {
-        setGameStarted(true);
-      });
+        socket.on(Constants.SOCKET_STARTED, data => {
+            setGameStarted(true);
+        });
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const poke = () => {
-      socket.emit(Constants.SOCKET_POKE, { id: socket.id });
+        socket.emit(Constants.SOCKET_POKE, { id: socket.id });
     };
 
     const join = () => {
         playAudioJoin();
         updateName(name);
-      socket.emit(Constants.SOCKET_JOIN, { name : name });
+        socket.emit(Constants.SOCKET_JOIN, { name : name });
     };
 
     const start = () => {
@@ -74,7 +74,7 @@ const MainPanel = ({updateName}) => {
     }
 
     const nameChange = (event) => {
-      setName(event.target.value);
+        setName(event.target.value);
     };
 
     return (
