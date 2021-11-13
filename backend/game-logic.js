@@ -14,7 +14,8 @@ const clientConnected = (sio, client) => {
     client.on(Constants.SOCKET_JOIN, playerJoined);
     client.on(Constants.SOCKET_POKE, poked);
     client.on(Constants.SOCKET_START, startGame);
-    sendStatus(client, 'Connected!');
+    client.on(Constants.SOCKET_CHAT, chat);
+    sendStatusFromServer(client, 'Connected!');
 };
 
 function playerDisconnected(data) {
@@ -32,11 +33,16 @@ function playerJoined(data) {
         // create game
         this.join(gameId);
         players.set(this.id, data.name);
-        sendStatus(this, 'Created game: ' + gameId);
+        sendStatus(this, 'Created game ' + gameId);
     } else {
         if(players.has(this.id)) {
+            // client no longer allows updating name... keep this block in case we want to re-add it later
+            const oldName = players.get(this.id);
+            if(oldName === data.name) {
+                return;
+            }
             players.set(this.id, data.name);
-            sendStatus(this, 'Updated name');
+            broadcastStatus(this.id, 'Updated name from ' + oldName);
         } else {
             var room = io.sockets.adapter.rooms.get(gameId);
             if(room === undefined) {
@@ -46,7 +52,7 @@ function playerJoined(data) {
             if(room.size < maxPlayers) {
                 this.join(gameId);
                 players.set(this.id, data.name);
-                sendStatus(this, 'Joined game: ' + gameId);
+                broadcastStatus(this.id, 'Joined game ' + gameId);
             } else {
                 sendStatus(this, 'Error game is full (' + players.size + '/' + room.size + ')');
                 return;
@@ -56,17 +62,25 @@ function playerJoined(data) {
     updatePlayers();
 }
 
-function poked(data) {
-    broadcastStatus('Poked by ' + players.get(data.id));
+function sendStatusFromServer(socket, message) {
+    socket.emit(Constants.SOCKET_STATUS, { from: 'server', message : message });
 }
 
 function sendStatus(socket, message) {
-    socket.emit(Constants.SOCKET_STATUS, { message : message });
+    socket.emit(Constants.SOCKET_STATUS, { from: socket.id, message : message });
 }
 
-function broadcastStatus(message) {
+function poked(data) {
+    broadcastStatus(this.id, '*poke*');
+}
+
+function broadcastStatusFromServer(message) {
+    broadcastStatus('server', message);
+}
+
+function broadcastStatus(from, message) {
     // io.sockets.emit(Constants.SOCKET_STATUS, { message : message }); // all players
-    io.sockets.in(gameId).emit(Constants.SOCKET_STATUS, { message : message }); // registered players
+    io.sockets.in(gameId).emit(Constants.SOCKET_STATUS, { from: from, message : message }); // registered players
 }
 
 function updatePlayers() {
@@ -75,7 +89,11 @@ function updatePlayers() {
 
 function startGame() {
     io.sockets.in(gameId).emit(Constants.SOCKET_STARTED, { data: 'tbd' });
-    broadcastStatus('Game started!');
+    broadcastStatusFromServer('Game started!');
+}
+
+function chat(data) {
+    broadcastStatus(this.id, data.message);
 }
 
 exports.clientConnected = clientConnected;
