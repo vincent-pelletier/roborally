@@ -6,8 +6,33 @@ const socket = require('../connections/socket').socket;
 
 const MainPanel = ({players}) => {
 
+    const test = false;
+
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
+
+    // game turn
+    // phase
+    // 1 - programming phase
+    // 1.1. draw 9(-) cards
+    // 1.2. pick 5, discard others
+    // 2 - activation phase
+    // for each of the 5 registers...
+    // 2.1. reveal programming card
+    // 2.2. move robot (based on priority)
+    // 2.3. board elements activate
+    // - 2x (blue) conveyor belts
+    // - 1x (green) conveyor belts
+    // - push panels
+    // - gears
+    // - board lasers
+    // 2.4. robots fire
+    // be on checkpoint!
+
+    // map notes:
+    // - pits
+    // - walls
+    // - priority antenna
 
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, data => {
@@ -24,7 +49,7 @@ const MainPanel = ({players}) => {
     return (
         <div className="main">
             {
-                gameStarted ? (
+                test || gameStarted ? (
                     <div className="game">
                         Game window
                     </div>

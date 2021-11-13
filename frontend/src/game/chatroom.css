@@ -1,11 +1,10 @@
 .chat {
     height: 100vh;
     width: 360px;
-    border-right: 1px solid #333;
+    border-right: 2px solid #888;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    background-color:teal;
 }
 
 .chat-header {
@@ -17,8 +16,8 @@
     padding: 5px;
     display: flex;
     flex-direction: column;
-    background-color: #eee;
     font-weight: bold;
+    /* set fixed height to prevent blips/scroll? */
 }
 
 .chatbox {
