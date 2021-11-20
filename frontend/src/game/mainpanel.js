@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import logo from '../logo.svg';
+import Deck from './deck';
 import './mainpanel.css';
 const Constants = require('../util/constants');
 const socket = require('../connections/socket').socket;
 
 const MainPanel = ({players}) => {
 
-    const test = false;
+    const test = true;
 
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
 
+    const [deck] = useState(new Deck({color: 'blue'})); // use players[self=true] color when test=false
+
+    //const [gameTurn, setGameTurn] = useState(1); //this should be in backend
+    //const phases = ['Programming', 'Activation'];
+    //const registers = [1, 2, 3, 4, 5];
+    // https://www.fgbradleys.com/rules/rules4/Robo%20Rally%20-%20rules.pdf
     // game turn
     // phase
     // 1 - programming phase
@@ -44,7 +51,13 @@ const MainPanel = ({players}) => {
 
     const start = () => {
         socket.emit(Constants.SOCKET_START, { id: socket.id });
-    }
+    };
+
+    const draw = () => {
+        deck.draw(9);
+        // TODO figure out how to update UI
+        // got a react component inside state, and we render the component.render()
+    };
 
     return (
         <div className="main">
@@ -52,6 +65,8 @@ const MainPanel = ({players}) => {
                 test || gameStarted ? (
                     <div className="game">
                         Game window
+                        {deck.render()}
+                        <button onClick={draw}>Draw</button>
                     </div>
                 ) : (
                     <div className="lobby">
