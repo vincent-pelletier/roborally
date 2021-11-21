@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import logo from '../logo.svg';
 import Deck from './deck';
 import './mainpanel.css';
@@ -12,7 +12,9 @@ const MainPanel = ({players}) => {
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
 
-    const [deck] = useState(new Deck({color: 'blue'})); // use players[self=true] color when test=false
+    const [color] = useState('blue'); // use players[self=true] color when test=false
+    const [drawHand, setDrawHand] = useState(0);
+    const [discardHand, setDiscardHand] = useState(false);
 
     //const [gameTurn, setGameTurn] = useState(1); //this should be in backend
     //const phases = ['Programming', 'Activation'];
@@ -46,7 +48,9 @@ const MainPanel = ({players}) => {
             setGameStarted(true);
         });
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        return () => {
+            socket.off(Constants.SOCKET_STARTED);
+        };
     }, []);
 
     const start = () => {
@@ -54,14 +58,20 @@ const MainPanel = ({players}) => {
     };
 
     const draw = () => {
-        deck.draw(9);
-        // TODO figure out how to update UI
-        // got a react component inside state, and we render the component.render()
+        setDrawHand(9); // control how many to draw
     };
 
+    const handleOnDrawHandComplete = useCallback(() => {
+        setDrawHand(0);
+    }, []);
+
     const discard = () => {
-        deck.discard();
-    }
+        setDiscardHand(true);
+    };
+
+    const handleOnDiscardHandComplete = useCallback(() => {
+        setDiscardHand(false);
+    }, []);
 
     return (
         <div className="main">
@@ -69,7 +79,8 @@ const MainPanel = ({players}) => {
                 test || gameStarted ? (
                     <div className="game">
                         Game window
-                        {deck.render()}
+                        <Deck drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
+                            discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} color={color} />
                         <div>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>

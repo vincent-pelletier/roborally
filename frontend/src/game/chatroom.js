@@ -5,6 +5,7 @@ const socket = require('../connections/socket').socket;
 
 const ChatRoom = ({players}) => {
 
+    //const {players} = useContext(PlayerContext); // contexte = interface, contextprovider contient la valeur (impl de l'interface), qui return {players}
     const [name, setName] = useState('');
     const [chats, setChats] = useState([]);
     const [text, setText] = useState('');
@@ -16,14 +17,17 @@ const ChatRoom = ({players}) => {
                 setName('');
             }
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        return () => {
+            socket.off(Constants.SOCKET_STATUS);
+        };
     }, []);
 
     const getColor = (id) => {
         if(id === 'server') {
             return 'server';
         }
-        for(var p of players) {
+        for(let p of players) {
             if(p.id === id) {
                 return p.color;
             }
@@ -35,7 +39,7 @@ const ChatRoom = ({players}) => {
         if(id === 'server') {
             return '';
         }
-        for(var p of players) {
+        for(let p of players) {
             if(p.id === id) {
                 return p.name + ': ';
             }

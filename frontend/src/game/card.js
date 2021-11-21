@@ -1,20 +1,15 @@
-import { Component } from "react";
+import './card.css';
+// prop types
 
-class Card extends Component {
-    constructor(props) {
-        super(props)
-        this.type = props.type;
-        this.key = props.key;
-    }
+const Card = ({card}) => {
 
-    render() {
-        return (
-            <div className={"card " + this.type} key={this.key}>
-                <span>{this.type}</span>
-                <span>({this.key})</span>
-            </div>
-        );
-    }
-}
+    return (
+        <div className={"card " + card.type}>
+            <span>{card.type}</span>
+            <span>({card.id})</span>
+        </div>
+    );
+};
 
+//Card.proptypes={type: proptype.string, key: proptype.int}
 export default Card;

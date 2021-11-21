@@ -3,8 +3,8 @@ const Constants = require('../frontend/src/util/constants');
 const gameId = '1';
 const maxPlayers = 6;
 
-var io;
-var players = new Map(); // key: socketId, value: name
+let io;
+const players = new Map(); // key: socketId, value: name
 
 const clientConnected = (sio, client) => {
     io = sio;
@@ -44,7 +44,7 @@ function playerJoined(data) {
             players.set(this.id, data.name);
             broadcastStatus(this.id, 'Updated name from ' + oldName);
         } else {
-            var room = io.sockets.adapter.rooms.get(gameId);
+            const room = io.sockets.adapter.rooms.get(gameId);
             if(room === undefined) {
                 sendStatus(this, 'Error game does not exist');
                 return;

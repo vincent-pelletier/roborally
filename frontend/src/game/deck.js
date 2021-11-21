@@ -1,5 +1,6 @@
-import { Component } from "react";
+import { useEffect, useState } from "react";
 import Card from "./card";
+import './deck.css';
 
 const Type = {
     MOVE_1: "move1",
@@ -11,46 +12,13 @@ const Type = {
     U_TURN: "u-turn"
 };
 
-class Deck extends Component {
-    constructor(props) {
-        super(props);
-        this.color = props.color;
-        this.cards = [];
-        this.drawPile = [];
-        this.discardPile = [];
-        this.hand = [];
+const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete}) => {
+    const [, setCards] = useState([]);
+    const [drawPile, setDrawPile] = useState([]);
+    const [discardPile, setDiscardPile] = useState([]);
+    const [hand, setHand] = useState([]);
 
-        this.initializeCards();
-        this.drawPile = this.shuffle(this.cards);
-        //this.draw(9); // this works to display UI
-    }
-
-    initializeCards() {
-        var idx = 1;
-        for(var i = 0; i < 18; i++) {
-            this.cards.push(new Card({type: Type.MOVE_1, key: idx++}));
-        }
-        for(i = 0; i < 12; i++) {
-            this.cards.push(new Card({type: Type.MOVE_2, key: idx++}));
-        }
-        for(i = 0; i < 6; i++) {
-            this.cards.push(new Card({type: Type.MOVE_3, key: idx++}));
-        }
-        for(i = 0; i < 6; i++) {
-            this.cards.push(new Card({type: Type.BACK_UP, key: idx++}));
-        }
-        for(i = 0; i < 18; i++) {
-            this.cards.push(new Card({type: Type.ROTATE_RIGHT, key: idx++}));
-        }
-        for(i = 0; i < 18; i++) {
-            this.cards.push(new Card({type: Type.ROTATE_LEFT, key: idx++}));
-        }
-        for(i = 0; i < 6; i++) {
-            this.cards.push(new Card({type: Type.U_TURN, key: idx++}));
-        }
-    }
-
-    shuffle(arr) {
+    const shuffle = (arr) => {
         let array = [...arr]; // copy
         let currentIndex = array.length, randomIndex;
 
@@ -66,39 +34,85 @@ class Deck extends Component {
         }
 
         return array;
-    }
+    };
 
-    draw(num) {
-        this.hand = [];
-        for(var i = 0; i < num; i++) {
-            var card = this.drawPile.shift();
-            this.hand.push(card);
+    useEffect(() => {
+        const localCards = [];
+        for(let i = 0; i < 18; i++) {
+            localCards.push({type: Type.MOVE_1, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 12; i++) {
+            localCards.push({type: Type.MOVE_2, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 6; i++) {
+            localCards.push({type: Type.MOVE_3, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 6; i++) {
+            localCards.push({type: Type.BACK_UP, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 18; i++) {
+            localCards.push({type: Type.ROTATE_RIGHT, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 18; i++) {
+            localCards.push({type: Type.ROTATE_LEFT, id: localCards.length + 1});
+        }
+        for(let i = 0; i < 6; i++) {
+            localCards.push({type: Type.U_TURN, id: localCards.length + 1});
+        }
+        setCards(localCards);
+        setDrawPile(shuffle(localCards));
+    }, []);
 
-            if(this.drawPile.length === 0) {
-                this.drawPile = this.shuffle(this.discardPile);
-                this.discardPile = [];
+    useEffect(() => {
+        const draw = (num) => {
+            const localHand = [];
+            let localDrawPile = drawPile;
+            for(let i = 0; i < num; i++) {
+                const card = localDrawPile.shift();
+                localHand.push(card);
+
+                if(localDrawPile.length === 0) {
+                    localDrawPile = shuffle(discardPile);
+                    setDiscardPile([]);
+                }
             }
+            setHand(localHand);
+            setDrawPile(localDrawPile);
+            log(localHand);
+        };
+
+        if(drawHand > 0) {
+            draw(drawHand);
+            onDrawHandComplete();
         }
-        this.log(this.hand);
-    }
+    }, [drawHand, drawPile, discardPile, onDrawHandComplete]);
 
-    discard() {
-        while(this.hand.length > 0) {
-            this.discardPile.push(this.hand.shift());
+    useEffect(() => {
+        const discard = () => {
+            const localHand = hand;
+            const localDiscardPile = discardPile;
+            while(localHand.length > 0) {
+                localDiscardPile.push(localHand.shift());
+            }
+            setHand(localHand);
+            setDiscardPile(discardPile);
+        };
+
+        if(discardHand) {
+            discard();
+            onDiscardHandComplete();
         }
+    }, [discardHand, discardPile, hand, onDiscardHandComplete]);
+
+    const log = (arr) => {
+        console.log(arr?.map(c => c.id));
     }
 
-    log(arr) {
-        console.log(arr.map(c => c.key));
-    }
-
-    render() {
-        return (
-            <div className={"deck " + this.color}>
-                {this.hand.map(c => c.render())}
-            </div>
-        );
-    }
-}
+    return (
+        <div className={"deck " + color}>
+            {hand.map(c => <Card key={c.id} card={c} />)}
+        </div>
+    );
+};
 
 export default Deck;
