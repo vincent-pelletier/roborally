@@ -16,11 +16,12 @@ class Deck extends Component {
         super(props);
         this.color = props.color;
         this.cards = [];
-        this.deck = [];
-        this.discard = [];
+        this.drawPile = [];
+        this.discardPile = [];
         this.hand = [];
+
         this.initializeCards();
-        this.deck = this.shuffle(this.cards);
+        this.drawPile = this.shuffle(this.cards);
         //this.draw(9); // this works to display UI
     }
 
@@ -70,17 +71,21 @@ class Deck extends Component {
     draw(num) {
         this.hand = [];
         for(var i = 0; i < num; i++) {
-            var card = this.deck.shift();
+            var card = this.drawPile.shift();
             this.hand.push(card);
-            this.discard.push(card);
 
-            if(this.deck.length === 0) {
-                this.deck = this.shuffle(this.discard);
-                this.discard = [];
+            if(this.drawPile.length === 0) {
+                this.drawPile = this.shuffle(this.discardPile);
+                this.discardPile = [];
             }
         }
         this.log(this.hand);
-        console.log('deck size: ' + this.deck.length);
+    }
+
+    discard() {
+        while(this.hand.length > 0) {
+            this.discardPile.push(this.hand.shift());
+        }
     }
 
     log(arr) {

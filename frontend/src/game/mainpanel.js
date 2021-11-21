@@ -59,6 +59,10 @@ const MainPanel = ({players}) => {
         // got a react component inside state, and we render the component.render()
     };
 
+    const discard = () => {
+        deck.discard();
+    }
+
     return (
         <div className="main">
             {
@@ -66,7 +70,10 @@ const MainPanel = ({players}) => {
                     <div className="game">
                         Game window
                         {deck.render()}
-                        <button onClick={draw}>Draw</button>
+                        <div>
+                            <button onClick={draw}>Draw 9</button>
+                            <button onClick={discard}>Discard hand</button>
+                        </div>
                     </div>
                 ) : (
                     <div className="lobby">
