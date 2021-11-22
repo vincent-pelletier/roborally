@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
 import './App.css';
+import PlayerContext from './context/PlayerContext';
 import ChatRoom from './game/chatroom';
 import MainPanel from './game/mainpanel';
 import useSoundLibrary from './game/useSoundLibrary';
@@ -35,11 +36,9 @@ const App = () => {
 
             setPlayers(currentPlayers => {
                 if(localPlayers.length > currentPlayers.length) {
-                    // sound
                     playAudioJoin();
                     console.log('++');
                 } else if (localPlayers.length < currentPlayers.length) {
-                    // sound
                     playAudioLeave();
                     console.log('--');
                 }
@@ -53,8 +52,10 @@ const App = () => {
             <Router>
             <Switch>
                 <Route path="/" exact>
-                <ChatRoom players={players}/>
-                <MainPanel players={players}/>
+                    <PlayerContext.Provider value={players}>
+                        <ChatRoom/>
+                        <MainPanel/>
+                    </PlayerContext.Provider>
                 </Route>
                 <Redirect to="/"/>
             </Switch>

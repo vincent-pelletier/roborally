@@ -1,13 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
+import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
 import Deck from './deck';
 import './mainpanel.css';
 const Constants = require('../util/constants');
 const socket = require('../connections/socket').socket;
 
-const MainPanel = ({players}) => {
+const MainPanel = () => {
 
     const test = true;
+
+    const players = useContext(PlayerContext);
 
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
@@ -79,8 +82,8 @@ const MainPanel = ({players}) => {
                 test || gameStarted ? (
                     <div className="game">
                         Game window
-                        <Deck drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
-                            discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} color={color} />
+                        <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
+                            discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} />
                         <div>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>

@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import PlayerContext from '../context/PlayerContext';
 import './chatroom.css';
 const Constants = require('../util/constants');
 const socket = require('../connections/socket').socket;
 
-const ChatRoom = ({players}) => {
+const ChatRoom = () => {
 
-    //const {players} = useContext(PlayerContext); // contexte = interface, contextprovider contient la valeur (impl de l'interface), qui return {players}
+    const players = useContext(PlayerContext);
     const [name, setName] = useState('');
     const [chats, setChats] = useState([]);
     const [text, setText] = useState('');
@@ -80,9 +81,7 @@ const ChatRoom = ({players}) => {
                 {players.map((p, index) => <span key={index} className={p.color}>{p.name}{p.self ? '*' : ''}</span>)}
             </div>
             <div className="chatbox">
-                {chats.map(function(chat, index) {
-                    return <span key={index} className={getColor(chat.from)}>{getName(chat.from)}{chat.text}</span>;
-                })}
+                {chats.map((chat, index) => <span key={index} className={getColor(chat.from)}>{getName(chat.from)}{chat.text}</span>)}
             </div>
             {name ? (
                 <div className="chat-input">
