@@ -41,3 +41,31 @@
         transform: rotate(360deg);
     }
 }
+
+.board {
+    position: relative;
+}
+
+.robo {
+    z-index: 1;
+    position: absolute;
+}
+
+.robo1 {
+    left: 11px;
+    top: 10px;
+}
+
+.robo2 {
+    left: 911px;
+    top: 670px;
+}
+
+.grid-loc {
+    z-index: 1;
+    position: absolute;
+    font-size: 10px;
+    color: black;
+    width: 60px;
+    text-align: right;
+}

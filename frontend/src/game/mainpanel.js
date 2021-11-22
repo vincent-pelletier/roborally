@@ -1,4 +1,9 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import map from '../assets/Map.png';
+import robo1 from '../assets/Robo1.png';
+import robo2 from '../assets/Robo2.png';
+import robo3 from '../assets/Robo3.png';
+import startingMap from '../assets/StartingMap.png';
 import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
 import Deck from './deck';
@@ -18,6 +23,15 @@ const MainPanel = () => {
     const [color] = useState('blue'); // use players[self=true] color when test=false
     const [drawHand, setDrawHand] = useState(0);
     const [discardHand, setDiscardHand] = useState(false);
+
+    const positionX = [];
+    const positionY = [];
+    for(let col = 0; col < 16; col++) {
+        positionX.push(11 + 60 * col);
+    }
+    for(let row = 0; row < 12; row++) {
+        positionY.push(10 + 60 * row);
+    }
 
     //const [gameTurn, setGameTurn] = useState(1); //this should be in backend
     //const phases = ['Programming', 'Activation'];
@@ -81,7 +95,14 @@ const MainPanel = () => {
             {
                 test || gameStarted ? (
                     <div className="game">
-                        Game window
+                        <div className="board">
+                            <img src={startingMap} alt="starting-map" draggable="false"/>
+                            <img src={map} alt="map" draggable="false"/>
+                            <img src={robo1} alt="robo1" className="robo robo1"/>
+                            <img src={robo2} alt="robo2" className="robo robo2"/>
+                            <img src={robo3} alt="robo3" className="robo robo3" style={{top: positionY[8] + "px", left: positionX[4] + "px"}}/>
+                            {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
+                        </div>
                         <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
                             discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} />
                         <div>
