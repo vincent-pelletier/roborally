@@ -13,7 +13,7 @@ const socket = require('../connections/socket').socket;
 
 const MainPanel = () => {
 
-    const test = true;
+    const test = true; // Test game with this
 
     const players = useContext(PlayerContext);
 
@@ -103,8 +103,10 @@ const MainPanel = () => {
                             <img src={robo3} alt="robo3" className="robo robo3" style={{top: positionY[8] + "px", left: positionX[4] + "px"}}/>
                             {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                         </div>
-                        <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
-                            discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} />
+                        <div className="inventory">
+                            <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
+                                discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} />
+                        </div>
                         <div>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>

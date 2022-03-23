@@ -1,4 +1,6 @@
 .deck {
     display: flex;
     flex-direction: row;
+    min-height: 115px;
+    align-items: center;
 }

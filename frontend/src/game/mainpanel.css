@@ -69,3 +69,9 @@
     width: 60px;
     text-align: right;
 }
+
+.inventory {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}

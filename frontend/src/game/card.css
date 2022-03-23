@@ -11,6 +11,29 @@
     justify-content: center;
     height: 100px;
     width: 70px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.empty {
+    cursor: default !important;
+}
+
+.src {
+    box-shadow: 0px 0px 5px 1px lime;
+}
+
+.dest {
+    box-shadow: 0px 0px 5px 1px yellow;
+}
+
+.dest.empty {
+    box-shadow: 0px 0px 5px 1px red;
+}
+
+.locked {
+    box-shadow: inset 0px 0px 10px 10px red !important;
+    cursor: not-allowed !important;
 }
 
 .move1 {

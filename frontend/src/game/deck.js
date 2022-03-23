@@ -12,11 +12,15 @@ const Type = {
     U_TURN: "u-turn"
 };
 
+// Discard must be called after each draw, before the next draw, otherwise cards will run out.
 const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete}) => {
     const [, setCards] = useState([]);
     const [drawPile, setDrawPile] = useState([]);
     const [discardPile, setDiscardPile] = useState([]);
     const [hand, setHand] = useState([]);
+
+    const [register, setRegister] = useState([]);
+    const [selectedCard, setSelectedCard] = useState(0);
 
     const shuffle = (arr) => {
         let array = [...arr]; // copy
@@ -61,6 +65,12 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         }
         setCards(localCards);
         setDrawPile(shuffle(localCards));
+
+        const reg = [];
+            for(let i = 0; i < 5; i++) {
+                reg.push({type: undefined, id: -(reg.length + 1)});
+            }
+            setRegister(reg);
     }, []);
 
     useEffect(() => {
@@ -92,7 +102,10 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             const localHand = hand;
             const localDiscardPile = discardPile;
             while(localHand.length > 0) {
-                localDiscardPile.push(localHand.shift());
+                let card = localHand.shift(); // TODO later put unlocked register cards back into discard pile
+                if(card.id > 0) {
+                    localDiscardPile.push();
+                }
             }
             setHand(localHand);
             setDiscardPile(discardPile);
@@ -105,12 +118,134 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
     }, [discardHand, discardPile, hand, onDiscardHandComplete]);
 
     const log = (arr) => {
-        console.log(arr?.map(c => c.id));
+        console.log(arr?.map(c => c?.id));
+    }
+
+    const cardClicked = (id, e) => {
+        if(isLocked(id)) {
+            return;
+        }
+
+        switch(e.detail) {
+            case 1:
+                if(selectedCard === id) {
+                    // Commenting line below allows single > double-click to work fine...
+                    // Otherwise the double click does the swap, register/hand are updated, but not UI...
+                    // Keeping it allows unselecting a selected card.
+                    setSelectedCard(0);
+                } else if((id < 0 || inRegister(id)) && selectedCard > 0) {
+                    swap(selectedCard, id);
+                    setSelectedCard(0);
+                } else if(id > 0) {
+                    setSelectedCard(id);
+                }
+                break;
+            case 2:
+                if(id < 0) {
+                    return;
+                }
+                if(inRegister(id)) {
+                    const swapWith = getFirstEmptyInHand();
+                    if(swapWith !== 0) {
+                        swap(id, swapWith);
+                    }
+                } else {
+                    const swapWith = getFirstEmptyInRegister();
+                    if(swapWith !== 0) {
+                        swap(id, swapWith);
+                    }
+                }
+                setSelectedCard(0);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const getFirstEmptyInRegister = () => {
+        for(let i = 0; i < register.length; i++) {
+            if(register[i].id < 0) {
+                return register[i].id;
+            }
+        }
+        return 0;
+    }
+
+    const getFirstEmptyInHand = () => {
+        for(let i = 0; i < hand.length; i++) {
+            if(hand[i].id < 0) {
+                return hand[i].id;
+            }
+        }
+        return 0;
+    }
+
+    const swap = (a, b) => {
+        let cardA;
+        let cardB;
+        let cardC = {type: undefined, id: -100};
+        let cardD = {type: undefined, id: -101};
+
+        const localHand = hand;
+        const localRegister = register;
+        // find
+        for(let i = 0; i < localHand.length; i++) {
+            if(localHand[i].id === a) {
+                cardA = localHand[i];
+                localHand[i] = cardC;
+            } else if(localHand[i].id === b) {
+                cardB = localHand[i];
+                localHand[i] = cardD;
+            }
+        }
+        for(let i = 0; i < localRegister.length; i++) {
+            if(localRegister[i].id === a) {
+                cardA = localRegister[i];
+                localRegister[i] = cardC;
+            } else if(localRegister[i].id === b) {
+                cardB = localRegister[i];
+                localRegister[i] = cardD;
+            }
+        }
+
+        // swap
+        for(let i = 0; i < localHand.length; i++) {
+            if(localHand[i].id === cardC.id) {
+                localHand[i] = cardB;
+            } else if(localHand[i].id === cardD.id) {
+                localHand[i] = cardA;
+            }
+        }
+        for(let i = 0; i < localRegister.length; i++) {
+            if(localRegister[i].id === cardC.id) {
+                localRegister[i] = cardB;
+            } else if(localRegister[i].id === cardD.id) {
+                localRegister[i] = cardA;
+            }
+        }
+        setHand(localHand);
+        setRegister(localRegister);
+    };
+
+    const inRegister = (id) => {
+        for(let i = 0; i < register.length; i++) {
+            if(register[i].id === id) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const isLocked = (id) => {
+        // implement based on damage
+        return false;
     }
 
     return (
         <div className={"deck " + color}>
-            {hand.map(c => <Card key={c.id} card={c} />)}
+            {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked}/>)}
+            &nbsp;|&nbsp;
+            {register.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked}/>)}
         </div>
     );
 };
