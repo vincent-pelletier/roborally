@@ -24,6 +24,7 @@ const MainPanel = () => {
     const [drawHand, setDrawHand] = useState(0);
     const [discardHand, setDiscardHand] = useState(false);
     const [assignRandom, setAssignRandom] = useState(false);
+    const [confirmRegister, setConfirmRegister] = useState(false);
 
     const positionX = [];
     const positionY = [];
@@ -99,6 +100,16 @@ const MainPanel = () => {
         setAssignRandom(false);
     }, []);
 
+    const confirmRegisterTrigger = () => {
+        setConfirmRegister(true);
+    };
+
+    const handleConfirmRegisterComplete = (reg) => {
+        setConfirmRegister(false);
+        discard();
+        console.log(reg); // send to server
+    }
+
     return (
         <div className="main">
             {
@@ -115,12 +126,14 @@ const MainPanel = () => {
                         <div className="inventory">
                             <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
                                 discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete}
-                                assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete} />
+                                assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete}
+                                confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete} />
                         </div>
                         <div>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
+                            <button onClick={confirmRegisterTrigger}>Confirm register</button>
                         </div>
                     </div>
                 ) : (

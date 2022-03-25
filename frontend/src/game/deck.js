@@ -13,7 +13,7 @@ const Type = {
 };
 
 // Discard must be called after each draw, before the next draw, otherwise cards will run out.
-const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete}) => {
+const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete}) => {
     const [, setCards] = useState([]);
     const [drawPile, setDrawPile] = useState([]);
     const [discardPile, setDiscardPile] = useState([]);
@@ -67,14 +67,30 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         setDrawPile(shuffle(localCards));
 
         const reg = [];
-            for(let i = 0; i < 5; i++) {
-                reg.push({type: undefined, id: -(reg.length + 1)});
-            }
-            setRegister(reg);
+        for(let i = 0; i < 5; i++) {
+            reg.push({type: undefined, id: -(reg.length + 1)});
+        }
+        setRegister(reg);
     }, []);
 
     useEffect(() => {
         const draw = (num) => {
+            // discard previous register
+            let localRegister = register;
+            let localDiscardPile = discardPile;
+            while(localRegister.length > 0) {
+                let card = localRegister.shift();
+                if(card.id > 0) {
+                    localDiscardPile.push(card);
+                }
+            }
+            const reg = [];
+            for(let i = 0; i < 5; i++) {
+                reg.push({type: undefined, id: -(reg.length + 1)});
+            }
+            setRegister(reg);
+
+            // draw
             const localHand = [];
             let localDrawPile = drawPile;
             for(let i = 0; i < num; i++) {
@@ -95,16 +111,16 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             draw(drawHand);
             onDrawHandComplete();
         }
-    }, [drawHand, drawPile, discardPile, onDrawHandComplete]);
+    }, [drawHand, onDrawHandComplete, drawPile, discardPile, register]);
 
     useEffect(() => {
         const discard = () => {
             const localHand = hand;
             const localDiscardPile = discardPile;
             while(localHand.length > 0) {
-                let card = localHand.shift(); // TODO later put unlocked register cards back into discard pile
+                let card = localHand.shift();
                 if(card.id > 0) {
-                    localDiscardPile.push();
+                    localDiscardPile.push(card);
                 }
             }
             setHand(localHand);
@@ -263,6 +279,12 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             onAssignRandomComplete();
         }
     }, [assignRandom, onAssignRandomComplete, hand, register, swap, getFirstEmptyInRegister]);
+
+    useEffect(() => {
+        if(confirmRegister) {
+            onConfirmRegisterComplete(register);
+        }
+    }, [confirmRegister, onConfirmRegisterComplete, register]);
 
     return (
         <div className={"deck " + color}>
