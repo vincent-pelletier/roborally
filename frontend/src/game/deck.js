@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Card from "./card";
 import './deck.css';
 
@@ -13,7 +13,7 @@ const Type = {
 };
 
 // Discard must be called after each draw, before the next draw, otherwise cards will run out.
-const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete}) => {
+const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete}) => {
     const [, setCards] = useState([]);
     const [drawPile, setDrawPile] = useState([]);
     const [discardPile, setDiscardPile] = useState([]);
@@ -131,7 +131,8 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
                 if(selectedCard === id) {
                     // Commenting line below allows single > double-click to work fine...
                     // Otherwise the double click does the swap, register/hand are updated, but not UI...
-                    // Keeping it allows unselecting a selected card.
+                    // Maybe it needs to be in a useEffect or something...?
+                    // Keeping it allows unselecting a selected card, which is nice.
                     setSelectedCard(0);
                 } else if((id < 0 || inRegister(id)) && selectedCard > 0) {
                     swap(selectedCard, id);
@@ -162,25 +163,25 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         }
     };
 
-    const getFirstEmptyInRegister = () => {
+    const getFirstEmptyInRegister = useCallback(() => {
         for(let i = 0; i < register.length; i++) {
             if(register[i].id < 0) {
                 return register[i].id;
             }
         }
         return 0;
-    }
+    }, [register]);
 
-    const getFirstEmptyInHand = () => {
+    const getFirstEmptyInHand = useCallback(() => {
         for(let i = 0; i < hand.length; i++) {
             if(hand[i].id < 0) {
                 return hand[i].id;
             }
         }
         return 0;
-    }
+    }, [hand]);
 
-    const swap = (a, b) => {
+    const swap = useCallback((a, b) => {
         let cardA;
         let cardB;
         let cardC = {type: undefined, id: -100};
@@ -225,7 +226,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         }
         setHand(localHand);
         setRegister(localRegister);
-    };
+    }, [hand, register]);
 
     const inRegister = (id) => {
         for(let i = 0; i < register.length; i++) {
@@ -240,6 +241,28 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         // implement based on damage
         return false;
     }
+
+    useEffect(() => {
+        const randomizeRegister = () => {
+            let localHand = hand;
+            localHand = shuffle(localHand);
+            let localHandValid = [];
+            for(let i = 0; i < localHand.length; i++) {
+                if(localHand[i].id > 0) {
+                    localHandValid.push(localHand[i].id);
+                }
+            }
+            while(getFirstEmptyInRegister() !== 0) {
+                swap(getFirstEmptyInRegister(), localHandValid.shift());
+            }
+        };
+
+        if(assignRandom) {
+            // when timer runs out this will be called >:)
+            randomizeRegister();
+            onAssignRandomComplete();
+        }
+    }, [assignRandom, onAssignRandomComplete, hand, register, swap, getFirstEmptyInRegister]);
 
     return (
         <div className={"deck " + color}>

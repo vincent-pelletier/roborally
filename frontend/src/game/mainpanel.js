@@ -23,6 +23,7 @@ const MainPanel = () => {
     const [color] = useState('blue'); // use players[self=true] color when test=false
     const [drawHand, setDrawHand] = useState(0);
     const [discardHand, setDiscardHand] = useState(false);
+    const [assignRandom, setAssignRandom] = useState(false);
 
     const positionX = [];
     const positionY = [];
@@ -90,6 +91,14 @@ const MainPanel = () => {
         setDiscardHand(false);
     }, []);
 
+    const assignRandomTrigger = () => {
+        setAssignRandom(true);
+    };
+
+    const handleAssignRandomComplete = useCallback(() => {
+        setAssignRandom(false);
+    }, []);
+
     return (
         <div className="main">
             {
@@ -105,11 +114,13 @@ const MainPanel = () => {
                         </div>
                         <div className="inventory">
                             <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
-                                discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete} />
+                                discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete}
+                                assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete} />
                         </div>
                         <div>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>
+                            <button onClick={assignRandomTrigger}>Assign random</button>
                         </div>
                     </div>
                 ) : (
