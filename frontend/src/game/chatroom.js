@@ -33,7 +33,7 @@ const ChatRoom = () => {
                 return p.color;
             }
         }
-        return 'black';
+        return 'neutral';
     };
 
     const getName = (id) => {

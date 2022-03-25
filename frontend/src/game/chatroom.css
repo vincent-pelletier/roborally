@@ -1,7 +1,8 @@
 .chat {
     height: 100vh;
     width: 360px;
-    border-right: 2px solid #888;
+    background-color: #252526;
+    border-right: 1px solid #888;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -21,7 +22,7 @@
 }
 
 .chatbox {
-    background-color:#eee;
+    background-color:#37373d;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -33,7 +34,7 @@
 }
 
 .chatbox > span {
-    text-shadow: 1px 1px black;
+    text-shadow: 1px 1px 1px black;
 }
 
 .blue {
@@ -60,14 +61,13 @@
     color: gold;
 }
 
-.black {
-    color: black;
+.neutral {
+    color: #ccc;
 }
 
 .server {
     font-weight: bold;
-    color: black;
-    text-shadow: 0px 0px !important;
+    color: #ccc;
 }
 
 .chat-input {
