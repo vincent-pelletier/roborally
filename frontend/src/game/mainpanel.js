@@ -3,6 +3,9 @@ import map from '../assets/Map.png';
 import robo1 from '../assets/Robo1.png';
 import robo2 from '../assets/Robo2.png';
 import robo3 from '../assets/Robo3.png';
+import robo4 from '../assets/Robo4.png';
+import robo5 from '../assets/Robo5.png';
+import robo6 from '../assets/Robo6.png';
 import startingMap from '../assets/StartingMap.png';
 import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
@@ -26,6 +29,9 @@ const MainPanel = () => {
     const [assignRandom, setAssignRandom] = useState(false);
     const [confirmRegister, setConfirmRegister] = useState(false);
 
+    const [robots, setRobots] = useState([]);
+    const robotSrcs = useCallback(() => [robo1, robo2, robo3, robo4, robo5, robo6], []); // ew
+
     const positionX = [];
     const positionY = [];
     for(let col = 0; col < 16; col++) {
@@ -41,9 +47,9 @@ const MainPanel = () => {
     // https://www.fgbradleys.com/rules/rules4/Robo%20Rally%20-%20rules.pdf
     // game turn
     // phase
-    // 1 - programming phase
-    // 1.1. draw 9(-) cards
-    // 1.2. pick 5, discard others
+    // 1 - programming phase                [x]
+    // 1.1. draw 9(-) cards                 [x]
+    // 1.2. pick 5, discard others          [x]
     // 2 - activation phase
     // for each of the 5 registers...
     // 2.1. reveal programming card
@@ -62,15 +68,37 @@ const MainPanel = () => {
     // - walls
     // - priority antenna
 
+    const gameStartHandle = useCallback(() => {
+        // compute valid starting positions, shuffle them, assign to each robot
+        const localRobots = [];
+        for(let i = 0; i < players.length; i++) {
+            const robot = {
+                name: 'robo' + (i+1),
+                src: robotSrcs()[i],
+                x: 0,
+                y: i,
+                direction: (90 * i) % 360, // N: 0, E: 90, S: 180, W: 270
+                hp: 10
+            };
+            players[i].robot = robot;
+            localRobots.push(robot);
+        }
+        setRobots(localRobots);
+
+        setGameStarted(true);
+    }, [players, robotSrcs]);
+
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, data => {
-            setGameStarted(true);
+            gameStartHandle();
         });
 
         return () => {
             socket.off(Constants.SOCKET_STARTED);
         };
-    }, []);
+    }, [gameStartHandle]);
+
+
 
     const start = () => {
         socket.emit(Constants.SOCKET_START, { id: socket.id });
@@ -118,9 +146,7 @@ const MainPanel = () => {
                         <div className="board">
                             <img src={startingMap} alt="starting-map" draggable="false"/>
                             <img src={map} alt="map" draggable="false"/>
-                            <img src={robo1} alt="robo1" className="robo robo1"/>
-                            <img src={robo2} alt="robo2" className="robo robo2"/>
-                            <img src={robo3} alt="robo3" className="robo robo3" style={{top: positionY[8] + "px", left: positionX[4] + "px"}}/>
+                            {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
                             {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                         </div>
                         <div className="inventory">
@@ -130,6 +156,7 @@ const MainPanel = () => {
                                 confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete} />
                         </div>
                         <div>
+                            <button onClick={start}>Start game!</button>&nbsp;|&nbsp;
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>

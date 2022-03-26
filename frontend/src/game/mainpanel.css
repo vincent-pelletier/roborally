@@ -51,14 +51,20 @@
     position: absolute;
 }
 
-.robo1 {
-    left: 11px;
-    top: 10px;
+.direction0 {
+    transform: rotate(0deg);
 }
 
-.robo2 {
-    left: 911px;
-    top: 670px;
+.direction90 {
+    transform: rotate(90deg);
+}
+
+.direction180 {
+    transform: rotate(180deg);
+}
+
+.direction270 {
+    transform: rotate(270deg);
 }
 
 .grid-loc {

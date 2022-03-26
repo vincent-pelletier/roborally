@@ -75,7 +75,7 @@ const ChatRoom = () => {
     return (
         <div className="chat">
             <div className="chat-header">
-                Robo Rally
+                Robo Rally by Vincent
             </div>
             <div className="players">
                 {players.map((p, index) => <span key={index} className={p.color}>{p.name}{p.self ? '*' : ''}</span>)}
