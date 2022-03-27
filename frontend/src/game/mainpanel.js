@@ -12,6 +12,7 @@ import logo from '../logo.svg';
 import Deck from './deck';
 import './mainpanel.css';
 const Constants = require('../util/constants');
+const Type = require('./type');
 const socket = require('../connections/socket').socket;
 
 const MainPanel = () => {
@@ -52,8 +53,8 @@ const MainPanel = () => {
     // 1.2. pick 5, discard others          [x]
     // 2 - activation phase
     // for each of the 5 registers...
-    // 2.1. reveal programming card
-    // 2.2. move robot (based on priority)
+    // 2.1. reveal programming card (add display on the left regarding which robot + which move is sent by server)
+    // 2.2. move robot (based on priority)  [v]
     // 2.3. board elements activate
     // - 2x (blue) conveyor belts
     // - 1x (green) conveyor belts
@@ -66,7 +67,7 @@ const MainPanel = () => {
     // map notes:
     // - pits
     // - walls
-    // - priority antenna
+    // - priority antenna (not in this version?)
 
     const gameStartHandle = useCallback(() => {
         // compute valid starting positions, shuffle them, assign to each robot
@@ -97,8 +98,6 @@ const MainPanel = () => {
             socket.off(Constants.SOCKET_STARTED);
         };
     }, [gameStartHandle]);
-
-
 
     const start = () => {
         socket.emit(Constants.SOCKET_START, { id: socket.id });
@@ -132,11 +131,84 @@ const MainPanel = () => {
         setConfirmRegister(true);
     };
 
+    const [tempReg, setTempReg] = useState([]);
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
         discard();
-        console.log(reg); // send to server
+        setTempReg([...reg]); // send a copy to server
     }
+
+    const [tempMove, setTempMove] = useState(false);
+    const moveTrigger = () => {
+        setTempMove(true);
+    };
+
+    // this used to be
+    //   const applyMove = (robot, card) => { ... };
+    // but the UI wouldn't refresh, so now I've got these
+    // tempReg and tempMove above... not great, but works
+    // for now. It will probably be different when move cmd
+    // comes from the server.
+    useEffect(() => {
+        if(tempMove) {
+            setTempMove(false);
+            const localReg = tempReg;
+            const card = localReg.shift();
+            if(card) {
+                setTempReg(localReg);
+                const localRobots = robots;
+                const robot = localRobots[0];
+
+                console.log(card.type);
+                switch(card.type) {
+                    case(Type.MOVE_1):
+                    case(Type.MOVE_2):
+                    case(Type.MOVE_3):
+                    case(Type.BACK_UP):
+                        // validate no wall in path, else reduce distance
+                        // validate if pushing another robot
+                        const distance = card.type === Type.MOVE_1 ? 1 :
+                                        card.type === Type.MOVE_2 ? 2 :
+                                        card.type === Type.MOVE_3 ? 3 : -1;
+                        let x = 0;
+                        let y = 0;
+                        switch(robot.direction) {
+                            case 0:
+                                y -= distance;
+                                break;
+                            case 90:
+                                x += distance;
+                                break;
+                            case 180:
+                                y += distance;
+                                break;
+                            case 270:
+                                x -= distance;
+                                break;
+                            default:
+                                alert('Unexpected direction: ' + robot.direction);
+                                break;
+                        }
+                        robot.x += x;
+                        robot.y += y;
+                        break;
+                    case(Type.ROTATE_RIGHT):
+                        robot.direction = (robot.direction + 90) % 360;
+                        break;
+                    case(Type.ROTATE_LEFT):
+                        robot.direction = (robot.direction + 270) % 360;
+                        break;
+                    case(Type.U_TURN):
+                        robot.direction = (robot.direction + 180) % 360;
+                        break;
+                    default:
+                        alert('Unexpected card type: ' + card.type);
+                        break;
+                }
+                setRobots(localRobots);
+            }
+        }
+    }, [tempMove, tempReg, robots]);
 
     return (
         <div className="main">
@@ -161,6 +233,7 @@ const MainPanel = () => {
                             <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
                             <button onClick={confirmRegisterTrigger}>Confirm register</button>
+                            <button onClick={moveTrigger}>Next move</button>
                         </div>
                     </div>
                 ) : (

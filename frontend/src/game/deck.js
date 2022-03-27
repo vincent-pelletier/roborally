@@ -1,16 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Card from "./card";
 import './deck.css';
-
-const Type = {
-    MOVE_1: "move1",
-    MOVE_2: "move2",
-    MOVE_3: "move3",
-    BACK_UP: "backup",
-    ROTATE_RIGHT: "rotate-right",
-    ROTATE_LEFT: "rotate-left",
-    U_TURN: "u-turn"
-};
+const Type = require('./type');
 
 // Discard must be called after each draw, before the next draw, otherwise cards will run out.
 const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete}) => {
@@ -42,14 +33,16 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
 
     useEffect(() => {
         const localCards = [];
-        for(let i = 0; i < 18; i++) {
-            localCards.push({type: Type.MOVE_1, id: localCards.length + 1});
+        // Lowest id has priority, server will send in that order.
+        // The antenna is in the new version of the game
+        for(let i = 0; i < 6; i++) {
+            localCards.push({type: Type.MOVE_3, id: localCards.length + 1});
         }
         for(let i = 0; i < 12; i++) {
             localCards.push({type: Type.MOVE_2, id: localCards.length + 1});
         }
-        for(let i = 0; i < 6; i++) {
-            localCards.push({type: Type.MOVE_3, id: localCards.length + 1});
+        for(let i = 0; i < 18; i++) {
+            localCards.push({type: Type.MOVE_1, id: localCards.length + 1});
         }
         for(let i = 0; i < 6; i++) {
             localCards.push({type: Type.BACK_UP, id: localCards.length + 1});
