@@ -54,7 +54,7 @@ function playerJoined(data) {
                 players.set(this.id, data.name);
                 broadcastStatus(this.id, 'Joined game ' + gameId);
             } else {
-                sendStatus(this, 'Error game is full (' + players.size + '/' + room.size + ')');
+                sendStatusFromServer(this, 'Error game is full (' + players.size + '/' + room.size + ')');
                 return;
             }
         }

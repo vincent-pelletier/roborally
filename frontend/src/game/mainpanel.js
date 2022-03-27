@@ -21,6 +21,7 @@ const MainPanel = () => {
 
     const players = useContext(PlayerContext);
 
+    const minPlayers = 2;
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
 
@@ -63,6 +64,39 @@ const MainPanel = () => {
     // - board lasers
     // 2.4. robots fire
     // be on checkpoint!
+
+    // Flow
+    // client keeps state of game
+    // - manages cards / card locks
+    //  - send register to server
+    //  - server broadcasts first register received signal
+    //  - also a broadcast to mark a player ready (maybe first is ^?)
+    //   - updates players as ready and/or puts in chat?
+    //  - starts timer countdown on clients
+    //  - timer end on client = randomise > send register
+    //
+    // - server broadcasts all received, register cards are flipped
+    // - server orders cards, broadcasts one at a time (with time interval?)
+    // - client receives move, displays it on the left, then executes it 1s later?
+
+    // - each client updates each robot's location
+    // - server broadcasts board element activation
+    //  - each client updates their map
+    //  - for board lasers, they are displayed, each client computes
+    //    hp loss of each robot
+    //  - same for robot lasers? data doesn't have to go through server...
+    // - each client tracks each robot's hp to display (bottom left, with flags)
+    // - includes the 1-5 cards of the actual register?
+    // timer will be in the top-right
+    // reboot zone in the bottom right (have position fct to move there if outside of [][], triggers reboot)
+    // reboot can be all client side...? rebooting robot can send signal to server which can broadcast in chat
+
+    // [move] [    |           ] [time]
+    // [ r1 ] [    |           ]
+    // [ r2 ] [    |           ] [ re ]
+    // [ r3 ] [    |           ] [ bo ]
+    // [ .. ] [    |           ] [ ot ]
+    //          [][][][][]
 
     // map notes:
     // - pits
@@ -239,7 +273,7 @@ const MainPanel = () => {
                 ) : (
                     <div className="lobby">
                         <img src={logo} className="logo" alt="logo" />
-                        {players.length === maxPlayers && players[0]['self'] ? (
+                        {players.length >= minPlayers && players.length <= maxPlayers && players[0]['self'] ? (
                             <button onClick={start}>Start game!</button>
                         ) : (null) }
                     </div>
