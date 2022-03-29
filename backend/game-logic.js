@@ -15,6 +15,7 @@ const clientConnected = (sio, client) => {
     client.on(Constants.SOCKET_POKE, poked);
     client.on(Constants.SOCKET_START, startGame);
     client.on(Constants.SOCKET_CHAT, chat);
+    client.on(Constants.SOCKET_SEND_REGISTER, receiveRegister);
     sendStatusFromServer(client, 'Connected!');
 };
 
@@ -63,15 +64,15 @@ function playerJoined(data) {
 }
 
 function sendStatusFromServer(socket, message) {
-    socket.emit(Constants.SOCKET_STATUS, { from: 'server', message : message });
+    socket.emit(Constants.SOCKET_STATUS, { from: 'server', message : message }); // socket.emit sends only to the caller
 }
 
 function sendStatus(socket, message) {
     socket.emit(Constants.SOCKET_STATUS, { from: socket.id, message : message });
 }
 
-function poked(data) {
-    broadcastStatus(this.id, '*poke*');
+function poked() {
+    broadcastStatus(this.id, '*poke*'); // this.id is the socketId of the player who poked
 }
 
 function broadcastStatusFromServer(message) {
@@ -84,16 +85,23 @@ function broadcastStatus(from, message) {
 }
 
 function updatePlayers() {
+    console.log(players);
     io.sockets.in(gameId).emit(Constants.SOCKET_PLAYERS, { players: JSON.stringify(Array.from(players)) });
 }
 
 function startGame() {
-    io.sockets.in(gameId).emit(Constants.SOCKET_STARTED, { data: 'tbd' });
+    io.sockets.in(gameId).emit(Constants.SOCKET_STARTED);
     broadcastStatusFromServer('Game started!');
 }
 
 function chat(data) {
     broadcastStatus(this.id, data.message);
+}
+
+function receiveRegister(data) {
+    console.log(this.id);
+    console.log(data);
+    // TODO decide how to store this data... per player (and later do math), or per turn?
 }
 
 exports.clientConnected = clientConnected;

@@ -89,7 +89,8 @@ const MainPanel = () => {
     // - includes the 1-5 cards of the actual register?
     // timer will be in the top-right
     // reboot zone in the bottom right (have position fct to move there if outside of [][], triggers reboot)
-    // reboot can be all client side...? rebooting robot can send signal to server which can broadcast in chat
+    // rebooting robot can send signal to server which can broadcast in chat
+    // clients can know others reboot if they fall off, but not when a player decides to
 
     // [move] [    |           ] [time]
     // [ r1 ] [    |           ]
@@ -134,7 +135,7 @@ const MainPanel = () => {
     }, [gameStartHandle]);
 
     const start = () => {
-        socket.emit(Constants.SOCKET_START, { id: socket.id });
+        socket.emit(Constants.SOCKET_START);
     };
 
     const draw = () => {
@@ -169,7 +170,8 @@ const MainPanel = () => {
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
         discard();
-        setTempReg([...reg]); // send a copy to server
+        setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
+        socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
     }
 
     const [tempMove, setTempMove] = useState(false);

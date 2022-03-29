@@ -69,7 +69,7 @@ const ChatRoom = () => {
     };
 
     const poke = () => {
-        socket.emit(Constants.SOCKET_POKE, { id: socket.id });
+        socket.emit(Constants.SOCKET_POKE);
     };
 
     return (
