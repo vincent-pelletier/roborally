@@ -55,7 +55,7 @@ const MainPanel = () => {
     // 2 - activation phase
     // for each of the 5 registers...
     // 2.1. reveal programming card (add display on the left regarding which robot + which move is sent by server)
-    // 2.2. move robot (based on priority)  [v]
+    // 2.2. move robot (based on priority)  [x]
     // 2.3. board elements activate
     // - 2x (blue) conveyor belts
     // - 1x (green) conveyor belts
@@ -76,7 +76,7 @@ const MainPanel = () => {
     //  - timer end on client = randomise > send register
     //
     // - server broadcasts all received, register cards are flipped
-    // - server orders cards, broadcasts one at a time (with time interval?)
+    // - server orders cards [x], broadcasts one at a time [x]
     // - client receives move, displays it on the left, then executes it 1s later?
 
     // - each client updates each robot's location

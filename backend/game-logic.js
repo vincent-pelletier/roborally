@@ -1,10 +1,13 @@
+const GameManager = require('./game-manager');
 const Constants = require('../frontend/src/util/constants');
 
-const gameId = '1';
+const gameId = '1'; // eventually random in URL... then a lot of params will need to be updated to consider multiple games simultaneously
 const maxPlayers = 6;
 
 let io;
 const players = new Map(); // key: socketId, value: name
+
+const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer);
 
 const clientConnected = (sio, client) => {
     io = sio;
@@ -90,6 +93,7 @@ function updatePlayers() {
 }
 
 function startGame() {
+    gameManager.start(players);
     io.sockets.in(gameId).emit(Constants.SOCKET_STARTED);
     broadcastStatusFromServer('Game started!');
 }
@@ -99,9 +103,7 @@ function chat(data) {
 }
 
 function receiveRegister(data) {
-    console.log(this.id);
-    console.log(data);
-    // TODO decide how to store this data... per player (and later do math), or per turn?
+    gameManager.addRegister(this.id, data.register);
 }
 
 exports.clientConnected = clientConnected;
