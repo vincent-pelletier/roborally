@@ -17,11 +17,9 @@ const socket = require('../connections/socket').socket;
 
 const MainPanel = () => {
 
-    const test = true; // Test game with this
-
     const players = useContext(PlayerContext);
 
-    const minPlayers = 2;
+    const minPlayers = 1; // 1 for test, 2 for prod
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
 
@@ -200,6 +198,11 @@ const MainPanel = () => {
             const localRobots = robots;
             for(const robot of localRobots) {
                 if(robot.player.id === nextCard.player) {
+                    if(robot.player.self) {
+                        // display card from register
+                        // probably want to add a register visibility count starting at 5,
+                        // set it to 0 when confirming, then increment here...
+                    }
                     switch(nextCard.type) {
                         case(Type.MOVE_1):
                         case(Type.MOVE_2):
@@ -255,7 +258,7 @@ const MainPanel = () => {
     return (
         <div className="main">
             {
-                test || gameStarted ? (
+                gameStarted ? (
                     <div className="game">
                         <div className="board">
                             <img src={startingMap} alt="starting-map" draggable="false"/>
@@ -270,7 +273,6 @@ const MainPanel = () => {
                                 confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete} />
                         </div>
                         <div>
-                            <button onClick={start}>Start game!</button>&nbsp;|&nbsp;
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>

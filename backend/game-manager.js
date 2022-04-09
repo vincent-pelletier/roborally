@@ -14,6 +14,7 @@ class GameManager {
 
     start(players) {
         this.players = [...players.keys()];
+        this.finish();
         this.gameInterval = setInterval(this.gameloop.bind(this), 1000);
     }
 
