@@ -1,7 +1,8 @@
 class GameManager {
-    constructor(playerBroadcast, serverBroadcast) {
+    constructor(playerBroadcast, serverBroadcast, sendMove) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
+        this.sendMove = sendMove;
         this.turn = 1;
         this.lastTurnSent = 0;
         this.lastRegisterSent = 0;
@@ -17,8 +18,10 @@ class GameManager {
     }
 
     finish() {
-        clearInterval(this.gameInterval);
-        console.log('Ended');
+        if(this.gameInterval) {
+            clearInterval(this.gameInterval);
+            console.log('Ended');
+        }
     }
 
     addRegister(player, reg) {
@@ -69,6 +72,7 @@ class GameManager {
                         if(possibleCards[0] === reg.register[0]) {
                             const card = reg.register.shift();
                             this.playerBroadcast(reg.player, card.type);
+                            this.sendMove({player: reg.player, type: card.type, id: card.id});
                             break;
                         }
                     }

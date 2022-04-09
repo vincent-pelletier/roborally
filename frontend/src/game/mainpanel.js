@@ -25,11 +25,12 @@ const MainPanel = () => {
     const maxPlayers = 6;
     const [gameStarted, setGameStarted] = useState(false);
 
-    const [color] = useState('blue'); // use players[self=true] color when test=false
+    const [color, setColor] = useState('neutral');
     const [drawHand, setDrawHand] = useState(0);
     const [discardHand, setDiscardHand] = useState(false);
     const [assignRandom, setAssignRandom] = useState(false);
     const [confirmRegister, setConfirmRegister] = useState(false);
+    const [nextCard, setNextCard] = useState({});
 
     const [robots, setRobots] = useState([]);
     const robotSrcs = useCallback(() => [robo1, robo2, robo3, robo4, robo5, robo6], []); // ew
@@ -42,6 +43,14 @@ const MainPanel = () => {
     for(let row = 0; row < 12; row++) {
         positionY.push(10 + 60 * row);
     }
+
+    useEffect(() => {
+        for(const p of players) {
+            if(p.self) {
+                setColor(p.color);
+            }
+        }
+    }, [players]);
 
     //const [gameTurn, setGameTurn] = useState(1); //this should be in backend
     //const phases = ['Programming', 'Activation'];
@@ -114,9 +123,9 @@ const MainPanel = () => {
                 x: 0,
                 y: i,
                 direction: (90 * i) % 360, // N: 0, E: 90, S: 180, W: 270
-                hp: 10
+                hp: 10,
+                player: players[i]
             };
-            players[i].robot = robot;
             localRobots.push(robot);
         }
         setRobots(localRobots);
@@ -127,6 +136,10 @@ const MainPanel = () => {
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, data => {
             gameStartHandle();
+        });
+
+        socket.on(Constants.SOCKET_NEXT_CARD, card => {
+            setNextCard(card);
         });
 
         return () => {
@@ -166,85 +179,78 @@ const MainPanel = () => {
         setConfirmRegister(true);
     };
 
-    const [tempReg, setTempReg] = useState([]);
+    //const [tempReg, setTempReg] = useState([]);
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
         discard();
-        setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
+        //setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
         socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
     }
 
     const [tempMove, setTempMove] = useState(false);
-    const moveTrigger = () => {
+    // Combine these two useEffect to trigger the moves only once... not great.
+    useEffect(() => {
         setTempMove(true);
-    };
+    }, [nextCard]);
 
-    // this used to be
-    //   const applyMove = (robot, card) => { ... };
-    // but the UI wouldn't refresh, so now I've got these
-    // tempReg and tempMove above... not great, but works
-    // for now. It will probably be different when move cmd
-    // comes from the server.
     useEffect(() => {
         if(tempMove) {
             setTempMove(false);
-            const localReg = tempReg;
-            const card = localReg.shift();
-            if(card) {
-                setTempReg(localReg);
-                const localRobots = robots;
-                const robot = localRobots[0];
-
-                console.log(card.type);
-                switch(card.type) {
-                    case(Type.MOVE_1):
-                    case(Type.MOVE_2):
-                    case(Type.MOVE_3):
-                    case(Type.BACK_UP):
-                        // validate no wall in path, else reduce distance
-                        // validate if pushing another robot
-                        const distance = card.type === Type.MOVE_1 ? 1 :
-                                        card.type === Type.MOVE_2 ? 2 :
-                                        card.type === Type.MOVE_3 ? 3 : -1;
-                        let x = 0;
-                        let y = 0;
-                        switch(robot.direction) {
-                            case 0:
-                                y -= distance;
-                                break;
-                            case 90:
-                                x += distance;
-                                break;
-                            case 180:
-                                y += distance;
-                                break;
-                            case 270:
-                                x -= distance;
-                                break;
-                            default:
-                                alert('Unexpected direction: ' + robot.direction);
-                                break;
-                        }
-                        robot.x += x;
-                        robot.y += y;
-                        break;
-                    case(Type.ROTATE_RIGHT):
-                        robot.direction = (robot.direction + 90) % 360;
-                        break;
-                    case(Type.ROTATE_LEFT):
-                        robot.direction = (robot.direction + 270) % 360;
-                        break;
-                    case(Type.U_TURN):
-                        robot.direction = (robot.direction + 180) % 360;
-                        break;
-                    default:
-                        alert('Unexpected card type: ' + card.type);
-                        break;
+            console.log(nextCard);
+            const localRobots = robots;
+            for(const robot of localRobots) {
+                if(robot.player.id === nextCard.player) {
+                    switch(nextCard.type) {
+                        case(Type.MOVE_1):
+                        case(Type.MOVE_2):
+                        case(Type.MOVE_3):
+                        case(Type.BACK_UP):
+                            // validate no wall in path, else reduce distance
+                            // validate if pushing another robot
+                            const distance = nextCard.type === Type.MOVE_1 ? 1 :
+                                            nextCard.type === Type.MOVE_2 ? 2 :
+                                            nextCard.type === Type.MOVE_3 ? 3 : -1;
+                            let x = 0;
+                            let y = 0;
+                            switch(robot.direction) {
+                                case 0:
+                                    y -= distance;
+                                    break;
+                                case 90:
+                                    x += distance;
+                                    break;
+                                case 180:
+                                    y += distance;
+                                    break;
+                                case 270:
+                                    x -= distance;
+                                    break;
+                                default:
+                                    alert('Unexpected direction: ' + robot.direction);
+                                    break;
+                            }
+                            robot.x += x;
+                            robot.y += y;
+                            break;
+                        case(Type.ROTATE_RIGHT):
+                            robot.direction = (robot.direction + 90) % 360;
+                            break;
+                        case(Type.ROTATE_LEFT):
+                            robot.direction = (robot.direction + 270) % 360;
+                            break;
+                        case(Type.U_TURN):
+                            robot.direction = (robot.direction + 180) % 360;
+                            break;
+                        default:
+                            alert('Unexpected card type: ' + nextCard.type);
+                            break;
+                    }
+                    setRobots(localRobots);
+                    break;
                 }
-                setRobots(localRobots);
             }
         }
-    }, [tempMove, tempReg, robots]);
+    }, [nextCard, tempMove, robots, players]);
 
     return (
         <div className="main">
@@ -269,7 +275,6 @@ const MainPanel = () => {
                             <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
                             <button onClick={confirmRegisterTrigger}>Confirm register</button>
-                            <button onClick={moveTrigger}>Next move</button>
                         </div>
                     </div>
                 ) : (
