@@ -7,7 +7,7 @@ const maxPlayers = 6;
 let io;
 const players = new Map(); // key: socketId, value: name
 
-const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove);
+const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove, sendNextRegister);
 
 const clientConnected = (sio, client) => {
     io = sio;
@@ -110,6 +110,10 @@ function receiveRegister(data) {
 
 function sendMove(card) {
     io.sockets.in(gameId).emit(Constants.SOCKET_NEXT_CARD, card);
+}
+
+function sendNextRegister(data) {
+    io.sockets.in(gameId).emit(Constants.SOCKET_NEXT_REGISTER, data);
 }
 
 exports.clientConnected = clientConnected;

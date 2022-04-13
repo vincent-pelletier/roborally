@@ -29,6 +29,7 @@ const MainPanel = () => {
     const [assignRandom, setAssignRandom] = useState(false);
     const [confirmRegister, setConfirmRegister] = useState(false);
     const [nextCard, setNextCard] = useState({});
+    const [cardsVisible, setCardsVisible] = useState(0);
 
     const [robots, setRobots] = useState([]);
     const robotSrcs = useCallback(() => [robo1, robo2, robo3, robo4, robo5, robo6], []); // ew
@@ -132,13 +133,17 @@ const MainPanel = () => {
     }, [players, robotSrcs]);
 
     useEffect(() => {
-        socket.on(Constants.SOCKET_STARTED, data => {
+        socket.on(Constants.SOCKET_STARTED, () => {
             gameStartHandle();
         });
 
         socket.on(Constants.SOCKET_NEXT_CARD, card => {
             setNextCard(card);
         });
+
+        socket.on(Constants.SOCKET_NEXT_REGISTER, data => {
+            setCardsVisible(data.register);
+        })
 
         return () => {
             socket.off(Constants.SOCKET_STARTED);
@@ -151,6 +156,7 @@ const MainPanel = () => {
 
     const draw = () => {
         setDrawHand(9); // control how many to draw
+        setCardsVisible(5);
     };
 
     const handleOnDrawHandComplete = useCallback(() => {
@@ -181,6 +187,7 @@ const MainPanel = () => {
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
         discard();
+        setCardsVisible(0);
         //setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
         socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
     }
@@ -198,11 +205,6 @@ const MainPanel = () => {
             const localRobots = robots;
             for(const robot of localRobots) {
                 if(robot.player.id === nextCard.player) {
-                    if(robot.player.self) {
-                        // display card from register
-                        // probably want to add a register visibility count starting at 5,
-                        // set it to 0 when confirming, then increment here...
-                    }
                     switch(nextCard.type) {
                         case(Type.MOVE_1):
                         case(Type.MOVE_2):
@@ -270,7 +272,8 @@ const MainPanel = () => {
                             <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
                                 discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete}
                                 assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete}
-                                confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete} />
+                                confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete}
+                                cardsVisible={cardsVisible} />
                         </div>
                         <div>
                             <button onClick={draw}>Draw 9</button>

@@ -4,7 +4,7 @@ import './deck.css';
 const Type = require('./type');
 
 // Discard must be called after each draw, before the next draw, otherwise cards will run out.
-const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete}) => {
+const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete, cardsVisible}) => {
     const [, setCards] = useState([]);
     const [drawPile, setDrawPile] = useState([]);
     const [discardPile, setDiscardPile] = useState([]);
@@ -12,6 +12,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
 
     const [register, setRegister] = useState([]);
     const [selectedCard, setSelectedCard] = useState(0);
+    const [registerLocked, setRegisterLocked] = useState(false);
 
     const shuffle = (arr) => {
         let array = [...arr]; // copy
@@ -102,6 +103,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
 
         if(drawHand > 0) {
             draw(drawHand);
+            setRegisterLocked(false);
             onDrawHandComplete();
         }
     }, [drawHand, onDrawHandComplete, drawPile, discardPile, register]);
@@ -131,6 +133,10 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
     }
 
     const cardClicked = (id, e) => {
+        if(registerLocked) {
+            return;
+        }
+
         if(isLocked(id)) {
             return;
         }
@@ -276,14 +282,15 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
     useEffect(() => {
         if(confirmRegister) {
             onConfirmRegisterComplete(register);
+            setRegisterLocked(true);
         }
     }, [confirmRegister, onConfirmRegisterComplete, register]);
 
     return (
         <div className={"deck " + color}>
-            {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked}/>)}
+            {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked} visible={true}/>)}
             &nbsp;|&nbsp;
-            {register.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked}/>)}
+            {register.map((c, i) => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked} visible={i < cardsVisible}/>)}
         </div>
     );
 };

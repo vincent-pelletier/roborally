@@ -1,8 +1,9 @@
 class GameManager {
-    constructor(playerBroadcast, serverBroadcast, sendMove) {
+    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
         this.sendMove = sendMove;
+        this.sendNextRegister = sendNextRegister;
         this.turn = 1;
         this.lastTurnSent = 0;
         this.lastRegisterSent = 0;
@@ -57,6 +58,7 @@ class GameManager {
                             const regNum = 6 - most;
                             if(this.lastRegisterSent !== regNum) {
                                 this.serverBroadcast('Register ' + regNum);
+                                this.sendNextRegister({turn: this.turn, register: regNum});
                                 this.lastRegisterSent = regNum;
                                 return;
                             }

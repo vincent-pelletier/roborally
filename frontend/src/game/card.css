@@ -36,6 +36,15 @@
     cursor: not-allowed !important;
 }
 
+.flipped {
+    background-color: black;
+    /*background-image !important*/
+}
+
+.flipped > span {
+    display: none;
+}
+
 .move1 {
     /*background-image*/
 }
