@@ -289,7 +289,7 @@ const MainPanel = () => {
                         <div className="board">
                             <img src={startingMap} alt="starting-map" draggable="false"/>
                             <img src={map} alt="map" draggable="false"/>
-                            {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
+                            {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
                             {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                         </div>
                         <div className="inventory">
