@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import map from '../assets/Map.png';
 import robo1 from '../assets/Robo1.png';
 import robo2 from '../assets/Robo2.png';
@@ -32,16 +32,19 @@ const MainPanel = () => {
     const [cardsVisible, setCardsVisible] = useState(0);
 
     const [robots, setRobots] = useState([]);
-    const robotSrcs = useCallback(() => [robo1, robo2, robo3, robo4, robo5, robo6], []); // ew
+    const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
 
-    const positionX = [];
-    const positionY = [];
-    for(let col = 0; col < 16; col++) {
-        positionX.push(11 + 60 * col);
-    }
-    for(let row = 0; row < 12; row++) {
-        positionY.push(10 + 60 * row);
-    }
+    const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
+    const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
+
+    const validatePosition = useCallback((robot) => {
+        if(robot.x < 0 || robot.x >= positionX.length || robot.y < 0 || robot.y >= positionY.length) {
+            robot.rebooting = true;
+            robot.x = robot.respawnX;
+            robot.y = robot.respawnY;
+            robot.direction = robot.respawnDirection; // player can choose
+        }
+    }, [positionX, positionY]);
 
     useEffect(() => {
         for(const p of players) {
@@ -118,11 +121,15 @@ const MainPanel = () => {
         for(let i = 0; i < players.length; i++) {
             const robot = {
                 name: 'robo' + (i+1),
-                src: robotSrcs()[i],
+                src: robotSrcs[i],
                 x: 0,
                 y: i,
-                direction: (90 * i) % 360, // N: 0, E: 90, S: 180, W: 270
+                direction: 90, // N: 0, E: 90, S: 180, W: 270
                 hp: 10,
+                rebooting: false,
+                respawnX: 0,
+                respawnY: i,
+                respawnDirection: 90,
                 player: players[i]
             };
             localRobots.push(robot);
@@ -131,6 +138,18 @@ const MainPanel = () => {
 
         setGameStarted(true);
     }, [players, robotSrcs]);
+
+    const nextTurn = useCallback((turn) => {
+        if(turn > 0) {
+            const localRobots = robots;
+            for(const robot of localRobots) {
+                if(robot.rebooting) {
+                    robot.rebooting = false;
+                }
+            }
+            setRobots(localRobots);
+        }
+    }, [robots]);
 
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, () => {
@@ -143,12 +162,16 @@ const MainPanel = () => {
 
         socket.on(Constants.SOCKET_NEXT_REGISTER, data => {
             setCardsVisible(data.register);
-        })
+        });
+
+        socket.on(Constants.SOCKET_NEXT_TURN, data => {
+            nextTurn(data.turn);
+        });
 
         return () => {
             socket.off(Constants.SOCKET_STARTED);
         };
-    }, [gameStartHandle]);
+    }, [gameStartHandle, nextTurn]);
 
     const start = () => {
         socket.emit(Constants.SOCKET_START);
@@ -204,7 +227,7 @@ const MainPanel = () => {
             console.log(nextCard);
             const localRobots = robots;
             for(const robot of localRobots) {
-                if(robot.player.id === nextCard.player) {
+                if(robot.player.id === nextCard.player && !robot.rebooting) {
                     switch(nextCard.type) {
                         case(Type.MOVE_1):
                         case(Type.MOVE_2):
@@ -236,6 +259,7 @@ const MainPanel = () => {
                             }
                             robot.x += x;
                             robot.y += y;
+                            validatePosition(robot);
                             break;
                         case(Type.ROTATE_RIGHT):
                             robot.direction = (robot.direction + 90) % 360;
@@ -255,7 +279,7 @@ const MainPanel = () => {
                 }
             }
         }
-    }, [nextCard, tempMove, robots, players]);
+    }, [nextCard, tempMove, robots, players, validatePosition]);
 
     return (
         <div className="main">

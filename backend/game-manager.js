@@ -1,9 +1,14 @@
 class GameManager {
-    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister) {
+    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
         this.sendMove = sendMove;
         this.sendNextRegister = sendNextRegister;
+        this.sendNextTurn = sendNextTurn;
+        this.setDefaults();
+    }
+
+    setDefaults() {
         this.turn = 1;
         this.lastTurnSent = 0;
         this.lastRegisterSent = 0;
@@ -14,14 +19,15 @@ class GameManager {
     }
 
     start(players) {
-        this.players = [...players.keys()];
         this.finish();
+        this.players = [...players.keys()];
         this.gameInterval = setInterval(this.gameloop.bind(this), 1000);
     }
 
     finish() {
         if(this.gameInterval) {
             clearInterval(this.gameInterval);
+            this.setDefaults();
             console.log('Ended');
         }
     }
@@ -39,6 +45,7 @@ class GameManager {
         if(this.registers.length === this.players.length) {
             if(this.turn > this.lastTurnSent) {
                 this.serverBroadcast('Turn ' + this.turn);
+                this.sendNextTurn({turn: this.turn});
                 this.lastTurnSent = this.turn;
                 return;
             }

@@ -15,6 +15,7 @@ module.exports = {
     SOCKET_REGISTER_CONFIRMED: 'register-confirmed',// a player has confirmed its register (send this for ui, later also send chatbox status with timestamps)
     SOCKET_NEXT_CARD: 'next-card',                  // send next card to be played
     SOCKET_NEXT_REGISTER: 'next-register',          // notify next register starts
+    SOCKET_NEXT_TURN: 'next-turn',                  // notify next turn starts
     // board elements activation notification
     // robot laser fire notification
 };
