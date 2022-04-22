@@ -9,6 +9,7 @@ import robo6 from '../assets/Robo6.png';
 import startingMap from '../assets/StartingMap.png';
 import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
+import Card from './card';
 import Deck from './deck';
 import './mainpanel.css';
 const Constants = require('../util/constants');
@@ -30,6 +31,8 @@ const MainPanel = () => {
     const [confirmRegister, setConfirmRegister] = useState(false);
     const [nextCard, setNextCard] = useState({});
     const [cardsVisible, setCardsVisible] = useState(0);
+
+    const [lastCardPlayed, setLastCardPlayed] = useState({id: 0, type: '', color: 'neutral'});
 
     const [robots, setRobots] = useState([]);
     const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
@@ -168,6 +171,12 @@ const MainPanel = () => {
             nextTurn(data.turn);
         });
 
+        socket.on(Constants.SOCKET_TURN_END, () => {
+            // TODO why is this invoked multiple times?
+            setLastCardPlayed({id: 0, type: '', color: 'neutral'});
+            // discard previous register?
+        })
+
         return () => {
             socket.off(Constants.SOCKET_STARTED);
         };
@@ -185,10 +194,6 @@ const MainPanel = () => {
     const handleOnDrawHandComplete = useCallback(() => {
         setDrawHand(0);
     }, []);
-
-    const discard = () => {
-        setDiscardHand(true);
-    };
 
     const handleOnDiscardHandComplete = useCallback(() => {
         setDiscardHand(false);
@@ -209,7 +214,7 @@ const MainPanel = () => {
     //const [tempReg, setTempReg] = useState([]);
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
-        discard();
+        setDiscardHand(true);
         setCardsVisible(0);
         //setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
         socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
@@ -221,10 +226,20 @@ const MainPanel = () => {
         setTempMove(true);
     }, [nextCard]);
 
+    const getPlayerColor = useCallback((name) => {
+        for(const p of players) {
+            if(p.id === name) {
+                return p.color;
+            }
+        }
+        return 'neutral';
+    }, [players]);
+
     useEffect(() => {
-        if(tempMove) {
+        if(nextCard.id && tempMove) {
             setTempMove(false);
             console.log(nextCard);
+            setLastCardPlayed({id: nextCard.id, type: nextCard.type, color: getPlayerColor(nextCard.player)});
             const localRobots = robots;
             for(const robot of localRobots) {
                 if(robot.player.id === nextCard.player && !robot.rebooting) {
@@ -279,20 +294,36 @@ const MainPanel = () => {
                 }
             }
         }
-    }, [nextCard, tempMove, robots, players, validatePosition]);
+    }, [nextCard, tempMove, robots, validatePosition, getPlayerColor]);
 
     return (
         <div className="main">
             {
                 gameStarted ? (
                     <div className="game">
-                        <div className="board">
-                            <img src={startingMap} alt="starting-map" draggable="false"/>
-                            <img src={map} alt="map" draggable="false"/>
-                            {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
-                            {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
+                        <div className="row">
+                            <div className="side">
+                                <div className={'card-played' + (lastCardPlayed.id === 0 ? ' ghost' : '')}>
+                                    Last card played:
+                                    <div className={lastCardPlayed.color}>
+                                        <Card card={lastCardPlayed} selected={0} inRegister={() => false} isLocked={() => false} clicked={() => {}} visible={true}/>
+                                    </div>
+                                </div>
+                                <div>
+                                    robots
+                                </div>
+                            </div>
+                            <div className="board">
+                                <img src={startingMap} alt="starting-map" draggable="false"/>
+                                <img src={map} alt="map" draggable="false"/>
+                                {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
+                                {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
+                            </div>
+                            <div className="side">
+
+                            </div>
                         </div>
-                        <div className="inventory">
+                        <div>
                             <Deck color={color} drawHand={drawHand} onDrawHandComplete={handleOnDrawHandComplete}
                                 discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete}
                                 assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete}
@@ -301,7 +332,6 @@ const MainPanel = () => {
                         </div>
                         <div>
                             <button onClick={draw}>Draw 9</button>
-                            <button onClick={discard}>Discard hand</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
                             <button onClick={confirmRegisterTrigger}>Confirm register</button>
                         </div>

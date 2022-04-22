@@ -1,10 +1,11 @@
 class GameManager {
-    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn) {
+    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
         this.sendMove = sendMove;
         this.sendNextRegister = sendNextRegister;
         this.sendNextTurn = sendNextTurn;
+        this.sendTurnEnd = sendTurnEnd;
         this.setDefaults();
     }
 
@@ -90,6 +91,7 @@ class GameManager {
             } else {
                 this.registers = [];
                 this.turn++;
+                this.sendTurnEnd();
             }
         }
     }

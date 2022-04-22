@@ -16,6 +16,7 @@ module.exports = {
     SOCKET_NEXT_CARD: 'next-card',                  // send next card to be played
     SOCKET_NEXT_REGISTER: 'next-register',          // notify next register starts
     SOCKET_NEXT_TURN: 'next-turn',                  // notify next turn starts
+    SOCKET_TURN_END: 'turn-end',                    // notify turn ended
     // board elements activation notification
     // robot laser fire notification
 };
