@@ -48,9 +48,19 @@ const ChatRoom = () => {
         return '???: ';
     }
 
-    const updateText = (event) => {
-        setText(event.target.value);
+    const updateText = (e) => {
+        setText(e.target.value);
     };
+
+    const keyDown = (e) => {
+        if(e.key === 'Enter') {
+            if(name) {
+                send();
+            } else {
+                join();
+            }
+        }
+    }
 
     const send = () => {
         if(text && text.trim()) {
@@ -85,16 +95,16 @@ const ChatRoom = () => {
             </div>
             {name ? (
                 <div className="chat-input">
-                {name}
-                <input type="text" className="textbox" value={text} onChange={updateText}></input>
-                <button onClick={send}>&gt;</button> <button onClick={poke}>Poke</button>
-            </div>
+                    {name}
+                    <input type="text" className="textbox" value={text} onChange={updateText} onKeyDown={keyDown}></input>
+                    <button onClick={send}>&gt;</button> <button onClick={poke}>Poke</button>
+                </div>
             ) : (
                 <div className="chat-input">
-                Name
-                <input type="text" className="textbox" value={text} onChange={updateText}></input>
-                <button onClick={join}>Join</button>
-            </div>
+                    Name:
+                    <input type="text" className="textbox" value={text} onChange={updateText} maxLength="12" onKeyDown={keyDown}></input>
+                    <button onClick={join}>Join</button>
+                </div>
             )}
 
         </div>

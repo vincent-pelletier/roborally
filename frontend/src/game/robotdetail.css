@@ -1,0 +1,25 @@
+.robot-detail {
+    padding-bottom: 5px;
+}
+
+.mini-robot {
+    transform: rotate(90deg);
+    width: 30px;
+    height: 30px;
+    padding: 5px;
+}
+
+.flag {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.heart {
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 7px;
+}
+
+.right {
+    text-align: right;
+}

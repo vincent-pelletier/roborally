@@ -12,6 +12,7 @@ import logo from '../logo.svg';
 import Card from './card';
 import Deck from './deck';
 import './mainpanel.css';
+import RobotDetail from './robotdetail';
 const Constants = require('../util/constants');
 const Type = require('./type');
 const socket = require('../connections/socket').socket;
@@ -129,6 +130,7 @@ const MainPanel = () => {
                 y: i,
                 direction: 90, // N: 0, E: 90, S: 180, W: 270
                 hp: 10,
+                flags: 0,
                 rebooting: false,
                 respawnX: 0,
                 respawnY: i,
@@ -304,13 +306,13 @@ const MainPanel = () => {
                         <div className="row">
                             <div className="side">
                                 <div className={'card-played' + (lastCardPlayed.id === 0 ? ' ghost' : '')}>
-                                    Last card played:
-                                    <div className={lastCardPlayed.color}>
+                                    <span>Last card played</span>
+                                    <div className={'last-played-card ' + lastCardPlayed.color}>
                                         <Card card={lastCardPlayed} selected={0} inRegister={() => false} isLocked={() => false} clicked={() => {}} visible={true}/>
                                     </div>
                                 </div>
                                 <div>
-                                    robots
+                                    {robots.map((r, i) => <RobotDetail key={i} robot={r}/>)}
                                 </div>
                             </div>
                             <div className="board">

@@ -95,7 +95,18 @@
 }
 
 .card-played {
-    min-height: 160px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items:center;
+}
+
+.card-played>div>div {
+    cursor: default !important;
+}
+
+.last-played-card {
+    padding-top: 8px;
 }
 
 .ghost {
