@@ -13,7 +13,6 @@ const Card = ({card, selected, inRegister, isLocked, clicked, visible}) => {
             }
             onClick={(e) => clicked(card.id, e)}>
             <span>{card.type}</span>
-            <span>({card.id})</span>
         </div>
     );
 };

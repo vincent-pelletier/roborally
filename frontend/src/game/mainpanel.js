@@ -237,6 +237,26 @@ const MainPanel = () => {
         return 'neutral';
     }, [players]);
 
+    const moveRobot = useCallback((robot, x, y, otherRobots) => {
+        const finalX = robot.x + x;
+        const finalY = robot.y + y;
+        while(!(robot.x === finalX && robot.y === finalY) && !robot.rebooting) {
+            const moveX = x === 0 ? 0 : x / Math.abs(x);
+            const moveY = y === 0 ? 0 : y / Math.abs(y);
+            robot.x += moveX;
+            robot.y += moveY;
+            validatePosition(robot);
+            if(!robot.rebooting && otherRobots.length > 0) {
+                // push others
+                for(const otherRobot of otherRobots) {
+                    if(robot.x === otherRobot.x && robot.y === otherRobot.y && !otherRobot.rebooting) {
+                        moveRobot(otherRobot, moveX, moveY, otherRobots.filter(r => r.name !== otherRobot.name));
+                    }
+                }
+            }
+        }
+    }, [validatePosition]);
+
     useEffect(() => {
         if(nextCard.id && tempMove) {
             setTempMove(false);
@@ -274,9 +294,8 @@ const MainPanel = () => {
                                     alert('Unexpected direction: ' + robot.direction);
                                     break;
                             }
-                            robot.x += x;
-                            robot.y += y;
-                            validatePosition(robot);
+                            moveRobot(robot, x, y, localRobots.filter(r => r.name !== robot.name));
+
                             break;
                         case(Type.ROTATE_RIGHT):
                             robot.direction = (robot.direction + 90) % 360;
@@ -296,7 +315,7 @@ const MainPanel = () => {
                 }
             }
         }
-    }, [nextCard, tempMove, robots, validatePosition, getPlayerColor]);
+    }, [nextCard, tempMove, robots, moveRobot, getPlayerColor]);
 
     return (
         <div className="main">
