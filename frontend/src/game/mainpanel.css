@@ -46,11 +46,24 @@
     position: relative;
     margin-left: 12px;
     margin-right: 12px;
+    overflow: hidden;
 }
 
 .robo {
+    z-index: 2;
+    position: absolute;
+}
+
+.laser {
     z-index: 1;
     position: absolute;
+    display:none;
+    /*mix-blend-mode: hard-light;
+    filter: hue-rotate(0deg);*/
+}
+
+.active {
+    display: initial;
 }
 
 .direction0 {

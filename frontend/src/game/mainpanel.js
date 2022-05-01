@@ -1,4 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import laserX from '../assets/LaserX.png';
+import laserY from '../assets/LaserY.png';
 import map from '../assets/Map.png';
 import robo1 from '../assets/Robo1.png';
 import robo2 from '../assets/Robo2.png';
@@ -37,6 +39,8 @@ const MainPanel = () => {
 
     const [robots, setRobots] = useState([]);
     const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
+
+    const [laser, setLaser] = useState({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
 
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
     const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
@@ -186,6 +190,33 @@ const MainPanel = () => {
 
     const start = () => {
         socket.emit(Constants.SOCKET_START);
+    };
+
+    const fire = () => {
+        const robot = robots.filter(r => r.player.self)[0];
+        let length = 0;
+        switch(robot.direction) {
+            case 0:
+                length = robot.y;
+                break;
+            case 90:
+                length = positionX.length - robot.x;
+                break;
+            case 180:
+                length = positionY.length - robot.y;
+                break;
+            case 270:
+                length = robot.x;
+                break;
+            default:
+                alert('Unexpected direction ' + robot.direction);
+                break;
+        }
+        // adjust length and set targetPx if it hits
+        for(let i = 0; i <= length; i++) {
+            setTimeout(() => setLaser({active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0}), i * 35);
+        }
+        setTimeout(() => setLaser({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0}), length * 35 + 475);
     };
 
     const draw = () => {
@@ -338,6 +369,16 @@ const MainPanel = () => {
                                 <img src={startingMap} alt="starting-map" draggable="false"/>
                                 <img src={map} alt="map" draggable="false"/>
                                 {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
+                                <img src={laser.direction % 180 === 0 ? laserY : laserX} alt="laser" draggable="false"
+                                    className={'laser direction' + (laser.direction % 270 === 0 ? 180 : 0) + (laser.active ? ' active' : '')}
+                                    style={{
+                                        top: (laser.direction === 0 ? positionY[laser.y] - 910 : positionY[laser.y]) + "px",
+                                        left: (laser.direction === 270 ? positionX[laser.x] - 910 : positionX[laser.x]) + "px",
+                                        clipPath: "inset(0px " + (laser.direction % 180 === 0 ?
+                                            ("0px " + (positionX[positionX.length - laser.length - (laser.direction === 0 ? 1 : 0)] - (laser.direction === 0 ? positionY[0] : positionX[0]) + laser.targetPx) + "px") :
+                                            ((positionX[positionX.length - laser.length - (laser.direction === 270 ? 1 : 0)] - positionX[0] + laser.targetPx) + "px 0px")
+                                        ) + " 0px)"
+                                    }}/>
                                 {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">
@@ -352,6 +393,7 @@ const MainPanel = () => {
                                 cardsVisible={cardsVisible} />
                         </div>
                         <div>
+                            <button onClick={fire}>Fire</button>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
                             <button onClick={confirmRegisterTrigger}>Confirm register</button>
