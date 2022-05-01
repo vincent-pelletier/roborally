@@ -40,6 +40,7 @@ const MainPanel = () => {
     const [robots, setRobots] = useState([]);
     const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
 
+    const [robotsFire, setRobotsFire] = useState(false);
     const [laser, setLaser] = useState({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
 
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
@@ -160,6 +161,36 @@ const MainPanel = () => {
         }
     }, [robots]);
 
+    const fire = useEffect(() => {
+        if(robotsFire) {
+            setRobotsFire(false);
+            const robot = robots.filter(r => r.player.self)[0];
+            let length = 0;
+            switch(robot.direction) {
+                case 0:
+                    length = robot.y;
+                    break;
+                case 90:
+                    length = positionX.length - robot.x;
+                    break;
+                case 180:
+                    length = positionY.length - robot.y;
+                    break;
+                case 270:
+                    length = robot.x;
+                    break;
+                default:
+                    alert('Unexpected direction ' + robot.direction);
+                    break;
+            }
+            // adjust length and set targetPx (to 20) if it hits.. walls will have a higher z-index than lasers
+            for(let i = 0; i <= length; i++) {
+                setTimeout(() => setLaser({active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0}), i * 35);
+            }
+            setTimeout(() => setLaser({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0}), 1000);
+        }
+    }, [positionX, positionY, robots, robotsFire]);
+
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, () => {
             gameStartHandle();
@@ -181,42 +212,20 @@ const MainPanel = () => {
             // TODO why is this invoked multiple times?
             setLastCardPlayed({id: 0, type: '', color: 'neutral'});
             // discard previous register?
-        })
+        });
+
+        socket.on(Constants.SOCKET_ROBOTS_FIRE, () => {
+            // TODO why is this invoked multiple times?
+            setRobotsFire(true);
+        });
 
         return () => {
             socket.off(Constants.SOCKET_STARTED);
         };
-    }, [gameStartHandle, nextTurn]);
+    }, [gameStartHandle, nextTurn, fire]);
 
     const start = () => {
         socket.emit(Constants.SOCKET_START);
-    };
-
-    const fire = () => {
-        const robot = robots.filter(r => r.player.self)[0];
-        let length = 0;
-        switch(robot.direction) {
-            case 0:
-                length = robot.y;
-                break;
-            case 90:
-                length = positionX.length - robot.x;
-                break;
-            case 180:
-                length = positionY.length - robot.y;
-                break;
-            case 270:
-                length = robot.x;
-                break;
-            default:
-                alert('Unexpected direction ' + robot.direction);
-                break;
-        }
-        // adjust length and set targetPx if it hits
-        for(let i = 0; i <= length; i++) {
-            setTimeout(() => setLaser({active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0}), i * 35);
-        }
-        setTimeout(() => setLaser({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0}), length * 35 + 475);
     };
 
     const draw = () => {
@@ -393,7 +402,6 @@ const MainPanel = () => {
                                 cardsVisible={cardsVisible} />
                         </div>
                         <div>
-                            <button onClick={fire}>Fire</button>
                             <button onClick={draw}>Draw 9</button>
                             <button onClick={assignRandomTrigger}>Assign random</button>
                             <button onClick={confirmRegisterTrigger}>Confirm register</button>

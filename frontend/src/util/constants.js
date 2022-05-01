@@ -17,6 +17,7 @@ module.exports = {
     SOCKET_NEXT_REGISTER: 'next-register',          // notify next register starts
     SOCKET_NEXT_TURN: 'next-turn',                  // notify next turn starts
     SOCKET_TURN_END: 'turn-end',                    // notify turn ended
+    SOCKET_ROBOTS_FIRE: 'robots-fire',              // notify robot to fire
     // board elements activation notification
     // robot laser fire notification
 };

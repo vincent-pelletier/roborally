@@ -7,7 +7,7 @@ const maxPlayers = 6;
 let io;
 const players = new Map(); // key: socketId, value: name
 
-const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd);
+const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire);
 
 const clientConnected = (sio, client) => {
     io = sio;
@@ -122,6 +122,10 @@ function sendNextTurn(data) {
 
 function sendTurnEnd() {
     io.sockets.in(gameId).emit(Constants.SOCKET_TURN_END);
+}
+
+function sendRobotsFire() {
+    io.sockets.in(gameId).emit(Constants.SOCKET_ROBOTS_FIRE);
 }
 
 exports.clientConnected = clientConnected;

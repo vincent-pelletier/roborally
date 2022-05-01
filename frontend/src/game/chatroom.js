@@ -13,7 +13,7 @@ const ChatRoom = () => {
 
     useEffect(() => {
         socket.on(Constants.SOCKET_STATUS, data => {
-            setChats(chats => [...chats, {from: data.from, text: data.message}]);
+            setChats(chats => [...chats, {from: data.from, text: data.message, time: new Date().toISOString().substr(14, 5)}]);
             if(data.message === 'Error game is full (6/6)') {
                 setName('');
             }
@@ -91,7 +91,7 @@ const ChatRoom = () => {
                 {players.map((p, index) => <span key={index} className={p.color}>{p.name}{p.self ? '*' : ''}</span>)}
             </div>
             <div className="chatbox">
-                {chats.map((chat, index) => <span key={index} className={getColor(chat.from)}>{getName(chat.from)}{chat.text}</span>)}
+                {chats.map((chat, index) => <span key={index} className={getColor(chat.from)}>[{chat.time}] {getName(chat.from)}{chat.text}</span>)}
             </div>
             {name ? (
                 <div className="chat-input">
