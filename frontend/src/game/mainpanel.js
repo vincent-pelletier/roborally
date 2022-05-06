@@ -1,6 +1,4 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import laserX from '../assets/LaserX.png';
-import laserY from '../assets/LaserY.png';
 import map from '../assets/Map.png';
 import robo1 from '../assets/Robo1.png';
 import robo2 from '../assets/Robo2.png';
@@ -13,6 +11,7 @@ import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
 import Card from './card';
 import Deck from './deck';
+import Laser from './laser';
 import './mainpanel.css';
 import RobotDetail from './robotdetail';
 const Constants = require('../util/constants');
@@ -41,7 +40,7 @@ const MainPanel = () => {
     const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
 
     const [robotsFire, setRobotsFire] = useState(false);
-    const [laser, setLaser] = useState({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
+    const [lasers, setLasers] = useState([]);
 
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
     const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
@@ -127,6 +126,7 @@ const MainPanel = () => {
     const gameStartHandle = useCallback(() => {
         // compute valid starting positions, shuffle them, assign to each robot
         const localRobots = [];
+        const localLasers = [];
         for(let i = 0; i < players.length; i++) {
             const robot = {
                 name: 'robo' + (i+1),
@@ -143,8 +143,10 @@ const MainPanel = () => {
                 player: players[i]
             };
             localRobots.push(robot);
+            localLasers.push({robot: robot.name, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
         }
         setRobots(localRobots);
+        setLasers(localLasers);
 
         setGameStarted(true);
     }, [players, robotSrcs]);
@@ -164,30 +166,31 @@ const MainPanel = () => {
     const fire = useEffect(() => {
         if(robotsFire) {
             setRobotsFire(false);
-            const robot = robots.filter(r => r.player.self)[0];
-            let length = 0;
-            switch(robot.direction) {
-                case 0:
-                    length = robot.y;
-                    break;
-                case 90:
-                    length = positionX.length - robot.x;
-                    break;
-                case 180:
-                    length = positionY.length - robot.y;
-                    break;
-                case 270:
-                    length = robot.x;
-                    break;
-                default:
-                    alert('Unexpected direction ' + robot.direction);
-                    break;
+            for(const robot of robots) {
+                let length = 0;
+                switch(robot.direction) {
+                    case 0:
+                        length = robot.y;
+                        break;
+                    case 90:
+                        length = positionX.length - robot.x;
+                        break;
+                    case 180:
+                        length = positionY.length - robot.y;
+                        break;
+                    case 270:
+                        length = robot.x;
+                        break;
+                    default:
+                        alert('Unexpected direction ' + robot.direction);
+                        break;
+                }
+                // adjust length and set targetPx (to 20) if it hits.. walls will have a higher z-index than lasers
+                for(let i = 0; i <= length; i++) {
+                    setTimeout(() => setLasers(ls => ls.map(l => l.robot !== robot.name ? l : {robot: robot.name, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0})), i * 35);
+                }
+                setTimeout(() => setLasers(ls => ls.map(l => l.robot !== robot.name ? l : {robot: robot.name, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0})), 1000);
             }
-            // adjust length and set targetPx (to 20) if it hits.. walls will have a higher z-index than lasers
-            for(let i = 0; i <= length; i++) {
-                setTimeout(() => setLaser({active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0}), i * 35);
-            }
-            setTimeout(() => setLaser({active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0}), 1000);
         }
     }, [positionX, positionY, robots, robotsFire]);
 
@@ -378,16 +381,7 @@ const MainPanel = () => {
                                 <img src={startingMap} alt="starting-map" draggable="false"/>
                                 <img src={map} alt="map" draggable="false"/>
                                 {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
-                                <img src={laser.direction % 180 === 0 ? laserY : laserX} alt="laser" draggable="false"
-                                    className={'laser direction' + (laser.direction % 270 === 0 ? 180 : 0) + (laser.active ? ' active' : '')}
-                                    style={{
-                                        top: (laser.direction === 0 ? positionY[laser.y] - 910 : positionY[laser.y]) + "px",
-                                        left: (laser.direction === 270 ? positionX[laser.x] - 910 : positionX[laser.x]) + "px",
-                                        clipPath: "inset(0px " + (laser.direction % 180 === 0 ?
-                                            ("0px " + (positionX[positionX.length - laser.length - (laser.direction === 0 ? 1 : 0)] - (laser.direction === 0 ? positionY[0] : positionX[0]) + laser.targetPx) + "px") :
-                                            ((positionX[positionX.length - laser.length - (laser.direction === 270 ? 1 : 0)] - positionX[0] + laser.targetPx) + "px 0px")
-                                        ) + " 0px)"
-                                    }}/>
+                                {lasers.map((laser, i) => <Laser key={i} laser={laser} positionX={positionX} positionY={positionY}/>)}
                                 {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">
