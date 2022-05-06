@@ -1,0 +1,11 @@
+.laser {
+    z-index: 1;
+    position: absolute;
+    display:none;
+    /*mix-blend-mode: hard-light;
+    filter: hue-rotate(0deg);*/
+}
+
+.active {
+    display: initial;
+}

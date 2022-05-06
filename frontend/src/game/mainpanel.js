@@ -1,11 +1,5 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import map from '../assets/Map.png';
-import robo1 from '../assets/Robo1.png';
-import robo2 from '../assets/Robo2.png';
-import robo3 from '../assets/Robo3.png';
-import robo4 from '../assets/Robo4.png';
-import robo5 from '../assets/Robo5.png';
-import robo6 from '../assets/Robo6.png';
 import startingMap from '../assets/StartingMap.png';
 import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
@@ -13,7 +7,9 @@ import Card from './card';
 import Deck from './deck';
 import Laser from './laser';
 import './mainpanel.css';
+import Robot from './robot';
 import RobotDetail from './robotdetail';
+
 const Constants = require('../util/constants');
 const Type = require('./type');
 const socket = require('../connections/socket').socket;
@@ -37,7 +33,6 @@ const MainPanel = () => {
     const [lastCardPlayed, setLastCardPlayed] = useState({id: 0, type: '', color: 'neutral'});
 
     const [robots, setRobots] = useState([]);
-    const robotSrcs = useMemo(() => [robo1, robo2, robo3, robo4, robo5, robo6], []);
 
     const [robotsFire, setRobotsFire] = useState(false);
     const [lasers, setLasers] = useState([]);
@@ -129,8 +124,7 @@ const MainPanel = () => {
         const localLasers = [];
         for(let i = 0; i < players.length; i++) {
             const robot = {
-                name: 'robo' + (i+1),
-                src: robotSrcs[i],
+                id: i,
                 x: 0,
                 y: i,
                 direction: 90, // N: 0, E: 90, S: 180, W: 270
@@ -143,13 +137,13 @@ const MainPanel = () => {
                 player: players[i]
             };
             localRobots.push(robot);
-            localLasers.push({robot: robot.name, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
+            localLasers.push({id: i, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0});
         }
         setRobots(localRobots);
         setLasers(localLasers);
 
         setGameStarted(true);
-    }, [players, robotSrcs]);
+    }, [players]);
 
     const nextTurn = useCallback((turn) => {
         if(turn > 0) {
@@ -187,9 +181,9 @@ const MainPanel = () => {
                 }
                 // adjust length and set targetPx (to 20) if it hits.. walls will have a higher z-index than lasers
                 for(let i = 0; i <= length; i++) {
-                    setTimeout(() => setLasers(ls => ls.map(l => l.robot !== robot.name ? l : {robot: robot.name, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0})), i * 35);
+                    setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0})), i * 35);
                 }
-                setTimeout(() => setLasers(ls => ls.map(l => l.robot !== robot.name ? l : {robot: robot.name, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0})), 1000);
+                setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0})), 1000);
             }
         }
     }, [positionX, positionY, robots, robotsFire]);
@@ -293,7 +287,7 @@ const MainPanel = () => {
                 // push others
                 for(const otherRobot of otherRobots) {
                     if(robot.x === otherRobot.x && robot.y === otherRobot.y && !otherRobot.rebooting) {
-                        moveRobot(otherRobot, moveX, moveY, otherRobots.filter(r => r.name !== otherRobot.name));
+                        moveRobot(otherRobot, moveX, moveY, otherRobots.filter(r => r.id !== otherRobot.id));
                     }
                 }
             }
@@ -337,7 +331,7 @@ const MainPanel = () => {
                                     alert('Unexpected direction: ' + robot.direction);
                                     break;
                             }
-                            moveRobot(robot, x, y, localRobots.filter(r => r.name !== robot.name));
+                            moveRobot(robot, x, y, localRobots.filter(r => r.id !== robot.id));
 
                             break;
                         case(Type.ROTATE_RIGHT):
@@ -380,8 +374,8 @@ const MainPanel = () => {
                             <div className="board">
                                 <img src={startingMap} alt="starting-map" draggable="false"/>
                                 <img src={map} alt="map" draggable="false"/>
-                                {robots.map((r, i) => <img key={i} src={r.src} alt={r.name} className={'robo direction' + r.direction + (r.rebooting ? ' rebooting' : '')} style={{top: positionY[r.y] + "px", left: positionX[r.x] + "px"}} draggable="false"/>)}
-                                {lasers.map((laser, i) => <Laser key={i} laser={laser} positionX={positionX} positionY={positionY}/>)}
+                                {robots.map((r, i) => <Robot key={i} robot={r} positionX={positionX} positionY={positionY}/>)}
+                                {lasers.map((l, i) => <Laser key={i} laser={l} positionX={positionX} positionY={positionY}/>)}
                                 {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">

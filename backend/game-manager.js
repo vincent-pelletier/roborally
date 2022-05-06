@@ -131,6 +131,7 @@ class GameManager {
                 this.turn++;
                 this.sendTurnEnd();
                 this.stage = this.stages.A_CHOOSING_CARDS;
+                break;
             default:
                 console.log('Unexpected stage: ' + this.stage);
                 break;

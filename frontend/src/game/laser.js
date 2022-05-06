@@ -1,5 +1,6 @@
 import laserX from '../assets/LaserX.png';
 import laserY from '../assets/LaserY.png';
+import './laser.css';
 
 const Laser = ({laser, positionX, positionY}) => {
 

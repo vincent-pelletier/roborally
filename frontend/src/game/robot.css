@@ -1,0 +1,8 @@
+.robo {
+    z-index: 2;
+    position: absolute;
+}
+
+.rebooting {
+    box-shadow: 0px 0px 5px 1px red;
+}
