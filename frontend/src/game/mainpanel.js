@@ -40,8 +40,8 @@ const MainPanel = () => {
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
     const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
 
-    const validatePosition = useCallback((robot) => {
-        if(robot.x < 0 || robot.x >= positionX.length || robot.y < 0 || robot.y >= positionY.length) {
+    const validateRobot = useCallback((robot) => {
+        if(robot.x < 0 || robot.x >= positionX.length || robot.y < 0 || robot.y >= positionY.length || robot.hp === 0) {
             robot.rebooting = true;
             robot.x = robot.respawnX;
             robot.y = robot.respawnY;
@@ -161,6 +161,10 @@ const MainPanel = () => {
         if(robotsFire) {
             setRobotsFire(false);
             for(const robot of robots) {
+                if(robot.rebooting) {
+                    continue;
+                }
+
                 let length = 0;
                 switch(robot.direction) {
                     case 0:
@@ -179,14 +183,56 @@ const MainPanel = () => {
                         alert('Unexpected direction ' + robot.direction);
                         break;
                 }
-                // adjust length and set targetPx (to 20) if it hits.. walls will have a higher z-index than lasers
+
+                // adjust length to the first robot it might hit
+                const otherRobots = robots.filter(r => r.id !== robot.id);
+                let hit = false;
+                for(let i = 1; i <= length; i++) {
+                    if(hit) {
+                        break;
+                    }
+                    let targetX;
+                    let targetY;
+                    switch(robot.direction) {
+                        case 0:
+                            targetX = robot.x;
+                            targetY = robot.y - i;
+                            break;
+                        case 90:
+                            targetX = robot.x + i;
+                            targetY = robot.y;
+                            break;
+                        case 180:
+                            targetX = robot.x;
+                            targetY = robot.y + i;
+                            break;
+                        case 270:
+                            targetX = robot.x - i;
+                            targetY = robot.y;
+                            break;
+                        default:
+                            break;
+                    }
+                    for(const otherRobot of otherRobots) {
+                        if(otherRobot.x === targetX && otherRobot.y === targetY) {
+                            hit = true;
+                            length = (robot.direction === 90 || robot.direction === 180) ? i + 1 : i;
+                            if(otherRobot.hp > 0) {
+                                otherRobot.hp--; // triggers multiple times ;_; but auto-updates robots?
+                            }
+                            validateRobot(otherRobot);
+                            break;
+                        }
+                    }
+                }
+
                 for(let i = 0; i <= length; i++) {
-                    setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: 0})), i * 35);
+                    setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: hit ? 20 : 0})), i * 35);
                 }
                 setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0})), 1000);
             }
         }
-    }, [positionX, positionY, robots, robotsFire]);
+    }, [positionX, positionY, robots, robotsFire, validateRobot]);
 
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, () => {
@@ -282,7 +328,7 @@ const MainPanel = () => {
             const moveY = y === 0 ? 0 : y / Math.abs(y);
             robot.x += moveX;
             robot.y += moveY;
-            validatePosition(robot);
+            validateRobot(robot);
             if(!robot.rebooting && otherRobots.length > 0) {
                 // push others
                 for(const otherRobot of otherRobots) {
@@ -292,7 +338,7 @@ const MainPanel = () => {
                 }
             }
         }
-    }, [validatePosition]);
+    }, [validateRobot]);
 
     useEffect(() => {
         if(nextCard.id && tempMove) {
