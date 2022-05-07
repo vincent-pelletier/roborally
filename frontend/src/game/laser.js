@@ -6,7 +6,7 @@ const Laser = ({laser, positionX, positionY}) => {
 
     return (
         <img src={laser.direction % 180 === 0 ? laserY : laserX} alt="laser" draggable="false"
-            className={'laser direction' + (laser.direction % 270 === 0 ? 180 : 0) + (laser.active ? ' active' : '')}
+            className={'laser direction' + (laser.direction % 270 === 0 ? 180 : 0) + ' laser-' + laser.id + (laser.active ? ' active' : '')}
             style={{
                 top: (laser.direction === 0 ? positionY[laser.y] - 910 : positionY[laser.y]) + "px",
                 left: (laser.direction === 270 ? positionX[laser.x] - 910 : positionX[laser.x]) + "px",

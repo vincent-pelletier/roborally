@@ -57,9 +57,6 @@ const MainPanel = () => {
         }
     }, [players]);
 
-    //const [gameTurn, setGameTurn] = useState(1); //this should be in backend
-    //const phases = ['Programming', 'Activation'];
-    //const registers = [1, 2, 3, 4, 5];
     // https://www.fgbradleys.com/rules/rules4/Robo%20Rally%20-%20rules.pdf
     // game turn
     // phase
@@ -68,7 +65,7 @@ const MainPanel = () => {
     // 1.2. pick 5, discard others          [x]
     // 2 - activation phase
     // for each of the 5 registers...
-    // 2.1. reveal programming card (add display on the left regarding which robot + which move is sent by server)
+    // 2.1. reveal programming card         [x]
     // 2.2. move robot (based on priority)  [x]
     // 2.3. board elements activate
     // - 2x (blue) conveyor belts
@@ -76,7 +73,7 @@ const MainPanel = () => {
     // - push panels
     // - gears
     // - board lasers
-    // 2.4. robots fire
+    // 2.4. robots fire                     [x]
     // be on checkpoint!
 
     // Flow
@@ -89,17 +86,17 @@ const MainPanel = () => {
     //  - starts timer countdown on clients
     //  - timer end on client = randomise > send register
     //
-    // - server broadcasts all received, register cards are flipped
+    // - server broadcasts all received [x], register cards are flipped [x]
     // - server orders cards [x], broadcasts one at a time [x]
-    // - client receives move, displays it on the left, then executes it 1s later?
+    // - client receives move [x], displays it on the left [x], then executes it [x] 1s later?
 
     // - each client updates each robot's location
     // - server broadcasts board element activation
     //  - each client updates their map
     //  - for board lasers, they are displayed, each client computes
     //    hp loss of each robot
-    //  - same for robot lasers? data doesn't have to go through server...
-    // - each client tracks each robot's hp to display (bottom left, with flags)
+    //  - same for robot lasers? data doesn't have to go through server... [x]
+    // - each client tracks each robot's hp to display (bottom left, with flags) [x]
     // - includes the 1-5 cards of the actual register?
     // timer will be in the top-right
     // reboot zone in the bottom right (have position fct to move there if outside of [][], triggers reboot)
@@ -147,13 +144,11 @@ const MainPanel = () => {
 
     const nextTurn = useCallback((turn) => {
         if(turn > 0) {
-            const localRobots = robots;
-            for(const robot of localRobots) {
+            for(const robot of robots) {
                 if(robot.rebooting) {
                     robot.rebooting = false;
                 }
             }
-            setRobots(localRobots);
         }
     }, [robots]);
 
@@ -218,7 +213,7 @@ const MainPanel = () => {
                             hit = true;
                             length = (robot.direction === 90 || robot.direction === 180) ? i + 1 : i;
                             if(otherRobot.hp > 0) {
-                                otherRobot.hp--; // triggers multiple times ;_; but auto-updates robots?
+                                otherRobot.hp--; // triggers multiple times ;_;
                             }
                             validateRobot(otherRobot);
                             break;
@@ -296,12 +291,10 @@ const MainPanel = () => {
         setConfirmRegister(true);
     };
 
-    //const [tempReg, setTempReg] = useState([]);
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
         setDiscardHand(true);
         setCardsVisible(0);
-        //setTempReg([...reg]); // should we keep a copy, or hide the cards and re-open per register? :P probably keep+hide + reveal on turn start.
         socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
     }
 
@@ -345,8 +338,7 @@ const MainPanel = () => {
             setTempMove(false);
             console.log(nextCard);
             setLastCardPlayed({id: nextCard.id, type: nextCard.type, color: getPlayerColor(nextCard.player)});
-            const localRobots = robots;
-            for(const robot of localRobots) {
+            for(const robot of robots) {
                 if(robot.player.id === nextCard.player && !robot.rebooting) {
                     switch(nextCard.type) {
                         case(Type.MOVE_1):
@@ -377,7 +369,7 @@ const MainPanel = () => {
                                     alert('Unexpected direction: ' + robot.direction);
                                     break;
                             }
-                            moveRobot(robot, x, y, localRobots.filter(r => r.id !== robot.id));
+                            moveRobot(robot, x, y, robots.filter(r => r.id !== robot.id));
 
                             break;
                         case(Type.ROTATE_RIGHT):
@@ -393,7 +385,6 @@ const MainPanel = () => {
                             alert('Unexpected card type: ' + nextCard.type);
                             break;
                     }
-                    setRobots(localRobots);
                     break;
                 }
             }

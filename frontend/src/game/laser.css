@@ -9,3 +9,29 @@
 .active {
     display: initial;
 }
+
+.laser-0 {
+    filter: hue-rotate(240deg);
+}
+
+.laser-1 {
+    /* default red */
+}
+
+.laser-2 {
+    filter: hue-rotate(90deg);
+}
+
+.laser-3 {
+    filter: hue-rotate(180deg);
+    mix-blend-mode: hard-light;
+}
+
+.laser-4 {
+    filter: hue-rotate(310deg);
+}
+
+.laser-5 {
+    filter: hue-rotate(65deg);
+    mix-blend-mode: hard-light;
+}
