@@ -29,6 +29,8 @@ const MainPanel = () => {
     const [confirmRegister, setConfirmRegister] = useState(false);
     const [nextCard, setNextCard] = useState({});
     const [cardsVisible, setCardsVisible] = useState(0);
+    const [canDraw, setCanDraw] = useState(true);
+    const [canChooseCards, setCanChooseCards] = useState(false);
 
     const [lastCardPlayed, setLastCardPlayed] = useState({id: 0, type: '', color: 'neutral'});
 
@@ -250,6 +252,7 @@ const MainPanel = () => {
             // TODO why is this invoked multiple times?
             setLastCardPlayed({id: 0, type: '', color: 'neutral'});
             // discard previous register?
+            setCanDraw(true);
         });
 
         socket.on(Constants.SOCKET_ROBOTS_FIRE, () => {
@@ -267,12 +270,14 @@ const MainPanel = () => {
     };
 
     const draw = () => {
-        setDrawHand(9); // control how many to draw
+        setDrawHand(true);
         setCardsVisible(5);
     };
 
     const handleOnDrawHandComplete = useCallback(() => {
-        setDrawHand(0);
+        setDrawHand(false);
+        setCanDraw(false);
+        setCanChooseCards(true);
     }, []);
 
     const handleOnDiscardHandComplete = useCallback(() => {
@@ -293,9 +298,12 @@ const MainPanel = () => {
 
     const handleConfirmRegisterComplete = (reg) => {
         setConfirmRegister(false);
-        setDiscardHand(true);
-        setCardsVisible(0);
-        socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
+        if(reg) {
+            setCanChooseCards(false);
+            setDiscardHand(true);
+            setCardsVisible(0);
+            socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
+        }
     }
 
     const [tempMove, setTempMove] = useState(false);
@@ -424,12 +432,12 @@ const MainPanel = () => {
                                 discardHand={discardHand} onDiscardHandComplete={handleOnDiscardHandComplete}
                                 assignRandom={assignRandom} onAssignRandomComplete={handleAssignRandomComplete}
                                 confirmRegister={confirmRegister} onConfirmRegisterComplete={handleConfirmRegisterComplete}
-                                cardsVisible={cardsVisible} />
+                                cardsVisible={cardsVisible} hp={robots.filter(r => r.player.self)[0].hp} />
                         </div>
-                        <div>
-                            <button onClick={draw}>Draw 9</button>
-                            <button onClick={assignRandomTrigger}>Assign random</button>
-                            <button onClick={confirmRegisterTrigger}>Confirm register</button>
+                        <div className="buttons">
+                            <button onClick={draw} className={canDraw ? '' : 'hidden'}>Draw {robots.filter(r => r.player.self)[0].hp - 1}</button>
+                            <button onClick={assignRandomTrigger} className={canChooseCards ? '' : 'hidden'}>Assign random</button>
+                            <button onClick={confirmRegisterTrigger} className={canChooseCards ? '' : 'hidden'}>Confirm register</button>
                         </div>
                     </div>
                 ) : (

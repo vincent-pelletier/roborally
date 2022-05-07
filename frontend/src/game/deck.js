@@ -4,7 +4,7 @@ import './deck.css';
 const Type = require('./type');
 
 // Discard must be called after each draw, before the next draw, otherwise cards will run out.
-const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete, cardsVisible}) => {
+const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandComplete, assignRandom, onAssignRandomComplete, confirmRegister, onConfirmRegisterComplete, cardsVisible, hp}) => {
     const [, setCards] = useState([]);
     const [drawPile, setDrawPile] = useState([]);
     const [discardPile, setDiscardPile] = useState([]);
@@ -67,27 +67,61 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         setRegister(reg);
     }, []);
 
+    const isLocked = useCallback((id) => {
+        // hp:  5 ... lock register 5
+        // hp:  4 ... lock registers 4, 5
+        // hp:  3 ... lock registers 3, 4, 5
+        // hp:  2 ... lock registers 2, 3, 4, 5
+        // hp:  1 ... lock registers 1, 2, 3, 4, 5
+
+        for(let i = 0; i < register.length; i++) {
+            if(register[i].id === id) {
+                return hp < i + 1;
+            }
+        }
+        return false;
+    }, [hp, register]);
+
     useEffect(() => {
-        const draw = (num) => {
+        const draw = () => {
             // discard previous register
-            let localRegister = register;
+            let localRegister = [...register];
             let localDiscardPile = discardPile;
+            let lockedRegisterCards = [];
             while(localRegister.length > 0) {
                 let card = localRegister.shift();
                 if(card.id > 0) {
-                    localDiscardPile.push(card);
+                    if(isLocked(card.id)) {
+                        lockedRegisterCards.push(card);
+                    } else {
+                        localDiscardPile.push(card);
+                    }
                 }
             }
             const reg = [];
-            for(let i = 0; i < 5; i++) {
+            for(let i = 0; i < 5 - lockedRegisterCards.length; i++) {
                 reg.push({type: undefined, id: -(reg.length + 1)});
+            }
+            for(const card of lockedRegisterCards) {
+                reg.push(card);
             }
             setRegister(reg);
 
             // draw
+            // hp: 10 ... draw 9
+            // hp:  9 ... draw 8
+            // hp:  8 ... draw 7
+            // hp:  7 ... draw 6
+            // hp:  6 ... draw 5
+            // hp:  5 ... draw 4 ... lock register 5
+            // hp:  4 ... draw 3 ... lock registers 4, 5
+            // hp:  3 ... draw 2 ... lock registers 3, 4, 5
+            // hp:  2 ... draw 1 ... lock registers 2, 3, 4, 5
+            // hp:  1 ... draw 0 ... lock registers 1, 2, 3, 4, 5
+            // hp:  0 ... destruction
             const localHand = [];
             let localDrawPile = drawPile;
-            for(let i = 0; i < num; i++) {
+            for(let i = 0; i < hp - 1; i++) {
                 const card = localDrawPile.shift();
                 localHand.push(card);
 
@@ -101,12 +135,12 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             log(localHand);
         };
 
-        if(drawHand > 0) {
-            draw(drawHand);
+        if(drawHand) {
+            draw();
             setRegisterLocked(false);
             onDrawHandComplete();
         }
-    }, [drawHand, onDrawHandComplete, drawPile, discardPile, register]);
+    }, [drawHand, onDrawHandComplete, drawPile, discardPile, register, isLocked, hp]);
 
     useEffect(() => {
         const discard = () => {
@@ -252,11 +286,6 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
         return false;
     };
 
-    const isLocked = (id) => {
-        // implement based on damage
-        return false;
-    }
-
     useEffect(() => {
         const randomizeRegister = () => {
             let localHand = hand;
@@ -276,19 +305,27 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             // when timer runs out this will be called >:)
             randomizeRegister();
             onAssignRandomComplete();
+            setSelectedCard(0);
         }
     }, [assignRandom, onAssignRandomComplete, hand, register, swap, getFirstEmptyInRegister]);
 
     useEffect(() => {
         if(confirmRegister) {
+            for(const card of register) {
+                if(card.id < 0) {
+                    onConfirmRegisterComplete(false);
+                    return; // incomplete
+                }
+            }
             onConfirmRegisterComplete(register);
             setRegisterLocked(true);
+            setSelectedCard(0);
         }
     }, [confirmRegister, onConfirmRegisterComplete, register]);
 
     return (
         <div className={"deck " + color}>
-            {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked} visible={true}/>)}
+            {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={(id) => false} clicked={cardClicked} visible={true}/>)}
             &nbsp;|&nbsp;
             {register.map((c, i) => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked} visible={i < cardsVisible}/>)}
         </div>

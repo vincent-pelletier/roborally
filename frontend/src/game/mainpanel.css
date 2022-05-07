@@ -104,3 +104,11 @@
 .ghost {
     opacity: 0;
 }
+
+.hidden {
+    display: none;
+}
+
+.buttons {
+    height: 23px;
+}

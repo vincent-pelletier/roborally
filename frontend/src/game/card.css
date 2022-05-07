@@ -32,7 +32,7 @@
 }
 
 .locked {
-    box-shadow: inset 0px 0px 10px 10px red !important;
+    box-shadow: inset 0px 0px 10px 3px red !important;
     cursor: not-allowed !important;
 }
 
