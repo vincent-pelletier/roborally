@@ -1,10 +1,14 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import flag1 from '../assets/Flag1.png';
+import flag2 from '../assets/Flag2.png';
+import flag3 from '../assets/Flag3.png';
 import map from '../assets/Map.png';
 import startingMap from '../assets/StartingMap.png';
 import PlayerContext from '../context/PlayerContext';
 import logo from '../logo.svg';
 import Card from './card';
 import Deck from './deck';
+import Flag from './flag';
 import Laser from './laser';
 import './mainpanel.css';
 import Robot from './robot';
@@ -38,6 +42,8 @@ const MainPanel = () => {
 
     const [robotsFire, setRobotsFire] = useState(false);
     const [lasers, setLasers] = useState([]);
+
+    const [flags, setFlags] = useState([]);
 
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
     const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
@@ -141,6 +147,12 @@ const MainPanel = () => {
         setRobots(localRobots);
         setLasers(localLasers);
 
+        const localFlags = [];
+        localFlags.push({id: 1, src: flag1, x: 14, y: 7});
+        localFlags.push({id: 2, src: flag2, x: 8, y: 9});
+        localFlags.push({id: 3, src: flag3, x: 11, y: 1});
+        setFlags(localFlags);
+
         setGameStarted(true);
     }, [players]);
 
@@ -231,6 +243,23 @@ const MainPanel = () => {
         }
     }, [positionX, positionY, robots, robotsFire, validateRobot]);
 
+    const verifyCheckpoints = useCallback(() => {
+        for(const robot of robots) {
+            if(robot.rebooting) continue; // validate if this is the rule
+            for(const flag of flags) {
+                if(robot.x === flag.x && robot.y === flag.y && robot.flags === flag.id - 1) {
+                    robot.flags++; // only updates ui with next register...
+                    robot.respawnX = flag.x;
+                    robot.respawnY = flag.y;
+                    // Write in chatbox?
+                    if(flag.id === 3) {
+                        console.log(robot.player.name + ' wins!');
+                    }
+                }
+            }
+        }
+    }, [robots, flags]);
+
     useEffect(() => {
         socket.on(Constants.SOCKET_STARTED, () => {
             gameStartHandle();
@@ -248,6 +277,15 @@ const MainPanel = () => {
             nextTurn(data.turn);
         });
 
+        socket.on(Constants.SOCKET_ROBOTS_FIRE, () => {
+            // TODO why is this invoked multiple times?
+            setRobotsFire(true);
+        });
+
+        socket.on(Constants.SOCKET_VERIFY_CHECKPOINTS, () => {
+            verifyCheckpoints();
+        });
+
         socket.on(Constants.SOCKET_TURN_END, () => {
             // TODO why is this invoked multiple times?
             setLastCardPlayed({id: 0, type: '', color: 'neutral'});
@@ -255,15 +293,10 @@ const MainPanel = () => {
             setCanDraw(true);
         });
 
-        socket.on(Constants.SOCKET_ROBOTS_FIRE, () => {
-            // TODO why is this invoked multiple times?
-            setRobotsFire(true);
-        });
-
         return () => {
             socket.off(Constants.SOCKET_STARTED);
         };
-    }, [gameStartHandle, nextTurn, fire]);
+    }, [gameStartHandle, nextTurn, verifyCheckpoints, fire]);
 
     const start = () => {
         socket.emit(Constants.SOCKET_START);
@@ -421,7 +454,8 @@ const MainPanel = () => {
                                 <img src={map} alt="map" draggable="false"/>
                                 {robots.map((r, i) => <Robot key={i} robot={r} positionX={positionX} positionY={positionY}/>)}
                                 {lasers.map((l, i) => <Laser key={i} laser={l} positionX={positionX} positionY={positionY}/>)}
-                                {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
+                                {flags.map((f, i) => <Flag key={i} flag={f} positionX={positionX} positionY={positionY}/>)}
+                                {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc hidden" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">
 

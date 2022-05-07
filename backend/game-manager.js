@@ -10,7 +10,7 @@ class GameManager {
         H_END_TURN: 'H. End turn'
     };
 
-    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire) {
+    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire, sendVerifyCheckpoints) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
         this.sendMove = sendMove;
@@ -18,6 +18,7 @@ class GameManager {
         this.sendNextTurn = sendNextTurn;
         this.sendTurnEnd = sendTurnEnd;
         this.sendRobotsFire = sendRobotsFire;
+        this.sendVerifyCheckpoints = sendVerifyCheckpoints;
         this.setDefaults();
     }
 
@@ -117,7 +118,7 @@ class GameManager {
                 break;
             case this.stages.G_VERIFY_CHECKPOINTS:
                 this.serverBroadcast('Verify checkpoints');
-                this.sleep = 1;
+                this.sendVerifyCheckpoints();
                 if(this.register < 5) {
                     this.register++;
                     this.stage = this.stages.B_BEGIN_REGISTER;
