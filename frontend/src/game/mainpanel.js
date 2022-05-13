@@ -13,6 +13,7 @@ import Laser from './laser';
 import './mainpanel.css';
 import Robot from './robot';
 import RobotDetail from './robotdetail';
+import Wall from './wall';
 
 const Constants = require('../util/constants');
 const Type = require('./type');
@@ -44,6 +45,8 @@ const MainPanel = () => {
     const [lasers, setLasers] = useState([]);
 
     const [flags, setFlags] = useState([]);
+    const [walls, setWalls] = useState([]); // for display
+    const [allWalls, setAllWalls] = useState([]); // includes mirrors, for collisions
 
     const positionX = Array.from(Array(16), (_,i) => 11 + 60 * i);
     const positionY = Array.from(Array(12), (_,i) => 10 + 60 * i);
@@ -153,6 +156,52 @@ const MainPanel = () => {
         localFlags.push({id: 3, src: flag3, x: 11, y: 1});
         setFlags(localFlags);
 
+        const localWalls = [];
+        localWalls.push({x: 1, y: 1, direction: 0});
+        localWalls.push({x: 1, y: 3, direction: 0});
+        localWalls.push({x: 1, y: 5, direction: 0});
+        localWalls.push({x: 1, y: 6, direction: 0});
+        localWalls.push({x: 1, y: 7, direction: 0});
+        localWalls.push({x: 1, y: 9, direction: 0});
+        localWalls.push({x: 1, y: 11, direction: 0});
+
+        localWalls.push({x: 0, y: 2, direction: 270});
+        localWalls.push({x: 0, y: 4, direction: 270});
+        localWalls.push({x: 0, y: 7, direction: 270});
+        localWalls.push({x: 0, y: 9, direction: 270});
+
+        localWalls.push({x: 3, y: 2, direction: 90});
+        localWalls.push({x: 3, y: 4, direction: 90});
+        localWalls.push({x: 3, y: 7, direction: 90});
+        localWalls.push({x: 3, y: 9, direction: 90});
+
+        setWalls(localWalls);
+
+        const mirrorWalls = [];
+        for(const wall of localWalls) {
+            let mirror = {x: wall.x, y: wall.y, direction: (wall.direction + 180) % 360};
+            switch(wall.direction) {
+                case 0:
+                    mirror.y--;
+                    break;
+                case 90:
+                    mirror.x++;
+                    break;
+                case 180:
+                    mirror.y++;
+                    break;
+                case 270:
+                    mirror.x--;
+                    break;
+                default:
+                    break;
+            }
+            if(mirror.x >= 0 && mirror.y >= 0) {
+                mirrorWalls.push(mirror);
+            }
+        }
+        setAllWalls([...localWalls, ...mirrorWalls]);
+
         setGameStarted(true);
     }, [players]);
 
@@ -175,18 +224,39 @@ const MainPanel = () => {
                 }
 
                 let length = 0;
+                const wallsInFront = allWalls.filter(w => w.direction === robot.direction && (
+                    (robot.direction === 0 && w.x === robot.x && w.y <= robot.y) ||
+                    (robot.direction === 180 && w.x === robot.x && w.y >= robot.y) ||
+                    (robot.direction === 90 && w.y === robot.y && w.x >= robot.x) ||
+                    (robot.direction === 270 && w.y === robot.y && w.x <= robot.x)));
                 switch(robot.direction) {
                     case 0:
-                        length = robot.y;
+                        if(wallsInFront) {
+                            length = robot.y - Math.max(...wallsInFront.map(w => w.y));
+                        } else {
+                            length = robot.y;
+                        }
                         break;
                     case 90:
-                        length = positionX.length - robot.x;
+                        if(wallsInFront) {
+                            length = Math.min(...wallsInFront.map(w => w.x)) - robot.x;
+                        } else {
+                            length = positionX.length - robot.x;
+                        }
                         break;
                     case 180:
-                        length = positionY.length - robot.y;
+                        if(wallsInFront) {
+                            length = Math.min(...wallsInFront.map(w => w.y)) - robot.y;
+                        } else {
+                            length = positionY.length - robot.y;
+                        }
                         break;
                     case 270:
-                        length = robot.x;
+                        if(wallsInFront) {
+                            length = robot.x - Math.max(...wallsInFront.map(w => w.x));
+                        } else {
+                            length = robot.x;
+                        }
                         break;
                     default:
                         alert('Unexpected direction ' + robot.direction);
@@ -235,13 +305,17 @@ const MainPanel = () => {
                     }
                 }
 
+                if(!hit && wallsInFront) {
+                    length = (robot.direction === 90 || robot.direction === 180) ? length + 1 : length;
+                }
+
                 for(let i = 0; i <= length; i++) {
                     setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: true, x: robot.x, y: robot.y, length: i, direction: robot.direction, targetPx: hit ? 20 : 0})), i * 35);
                 }
                 setTimeout(() => setLasers(ls => ls.map(l => l.id !== robot.id ? l : {id: robot.id, active: false, x: 0, y: 0, length: 0, direction: 0, targetPx: 0})), 1000);
             }
         }
-    }, [positionX, positionY, robots, robotsFire, validateRobot]);
+    }, [positionX, positionY, robots, allWalls, robotsFire, validateRobot]);
 
     const verifyCheckpoints = useCallback(() => {
         for(const robot of robots) {
@@ -360,6 +434,7 @@ const MainPanel = () => {
         while(!(robot.x === finalX && robot.y === finalY) && !robot.rebooting) {
             const moveX = x === 0 ? 0 : x / Math.abs(x);
             const moveY = y === 0 ? 0 : y / Math.abs(y);
+            // TODO consider wall collisions
             robot.x += moveX;
             robot.y += moveY;
             validateRobot(robot);
@@ -455,6 +530,7 @@ const MainPanel = () => {
                                 {robots.map((r, i) => <Robot key={i} robot={r} positionX={positionX} positionY={positionY}/>)}
                                 {lasers.map((l, i) => <Laser key={i} laser={l} positionX={positionX} positionY={positionY}/>)}
                                 {flags.map((f, i) => <Flag key={i} flag={f} positionX={positionX} positionY={positionY}/>)}
+                                {walls.map((w, i) => <Wall key={i} wall={w} positionX={positionX} positionY={positionY}/>)}
                                 {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc hidden" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">
