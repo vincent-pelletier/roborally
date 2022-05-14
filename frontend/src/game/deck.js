@@ -76,7 +76,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
 
         for(let i = 0; i < register.length; i++) {
             if(register[i].id === id) {
-                return hp < i + 1;
+                return hp <= i + 1;
             }
         }
         return false;
@@ -121,6 +121,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
             // hp:  0 ... destruction
             const localHand = [];
             let localDrawPile = drawPile;
+            // TODO when hp == 0, don't draw, reboot
             for(let i = 0; i < hp - 1; i++) {
                 const card = localDrawPile.shift();
                 localHand.push(card);

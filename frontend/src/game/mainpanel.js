@@ -175,6 +175,15 @@ const MainPanel = () => {
         localWalls.push({x: 3, y: 7, direction: 90});
         localWalls.push({x: 3, y: 9, direction: 90});
 
+        /*localWalls.push({x: 1, y: 6, direction: 270});
+        localWalls.push({x: 3, y: 6, direction: 270});
+        localWalls.push({x: 9, y: 6, direction: 90});
+        localWalls.push({x: 11, y: 6, direction: 90});
+        localWalls.push({x: 6, y: 1, direction: 0});
+        localWalls.push({x: 6, y: 3, direction: 0});
+        localWalls.push({x: 6, y: 8, direction: 180});
+        localWalls.push({x: 6, y: 10, direction: 180});*/
+
         setWalls(localWalls);
 
         const mirrorWalls = [];
@@ -231,28 +240,28 @@ const MainPanel = () => {
                     (robot.direction === 270 && w.y === robot.y && w.x <= robot.x)));
                 switch(robot.direction) {
                     case 0:
-                        if(wallsInFront) {
+                        if(wallsInFront.length > 0) {
                             length = robot.y - Math.max(...wallsInFront.map(w => w.y));
                         } else {
                             length = robot.y;
                         }
                         break;
                     case 90:
-                        if(wallsInFront) {
+                        if(wallsInFront.length > 0) {
                             length = Math.min(...wallsInFront.map(w => w.x)) - robot.x;
                         } else {
                             length = positionX.length - robot.x;
                         }
                         break;
                     case 180:
-                        if(wallsInFront) {
+                        if(wallsInFront.length > 0) {
                             length = Math.min(...wallsInFront.map(w => w.y)) - robot.y;
                         } else {
                             length = positionY.length - robot.y;
                         }
                         break;
                     case 270:
-                        if(wallsInFront) {
+                        if(wallsInFront.length > 0) {
                             length = robot.x - Math.max(...wallsInFront.map(w => w.x));
                         } else {
                             length = robot.x;
@@ -305,7 +314,7 @@ const MainPanel = () => {
                     }
                 }
 
-                if(!hit && wallsInFront) {
+                if(!hit && wallsInFront.length > 0) {
                     length = (robot.direction === 90 || robot.direction === 180) ? length + 1 : length;
                 }
 
@@ -431,23 +440,31 @@ const MainPanel = () => {
     const moveRobot = useCallback((robot, x, y, otherRobots) => {
         const finalX = robot.x + x;
         const finalY = robot.y + y;
+        const moveDir = x > 0 ? 90 : x < 0 ? 270 : y > 0 ? 180 : 0;
         while(!(robot.x === finalX && robot.y === finalY) && !robot.rebooting) {
             const moveX = x === 0 ? 0 : x / Math.abs(x);
             const moveY = y === 0 ? 0 : y / Math.abs(y);
-            // TODO consider wall collisions
-            robot.x += moveX;
-            robot.y += moveY;
-            validateRobot(robot);
-            if(!robot.rebooting && otherRobots.length > 0) {
+            const targetX = robot.x + moveX;
+            const targetY = robot.y + moveY;
+            let canMove = allWalls.filter(w => w.direction === moveDir && w.x === robot.x && w.y === robot.y).length === 0;
+            if(canMove && !robot.rebooting && otherRobots.length > 0) {
                 // push others
                 for(const otherRobot of otherRobots) {
-                    if(robot.x === otherRobot.x && robot.y === otherRobot.y && !otherRobot.rebooting) {
-                        moveRobot(otherRobot, moveX, moveY, otherRobots.filter(r => r.id !== otherRobot.id));
+                    if(targetX === otherRobot.x && targetY === otherRobot.y && !otherRobot.rebooting) {
+                        canMove = moveRobot(otherRobot, moveX, moveY, otherRobots.filter(r => r.id !== otherRobot.id));
                     }
                 }
             }
+            if(canMove) {
+                robot.x += moveX;
+                robot.y += moveY;
+                validateRobot(robot);
+            } else {
+                return false;
+            }
         }
-    }, [validateRobot]);
+        return true;
+    }, [validateRobot, allWalls]);
 
     useEffect(() => {
         if(nextCard.id && tempMove) {
