@@ -127,14 +127,25 @@ const MainPanel = () => {
     // - priority antenna (not in this version?)
 
     const gameStartHandle = useCallback(() => {
-        // compute valid starting positions, shuffle them, assign to each robot
+        const startingPositions = [
+            {x: 1, y: 5},
+            {x: 1, y: 6},
+            {x: 1, y: 3},
+            {x: 1, y: 8},
+            {x: 1, y: 1},
+            {x: 1, y: 10},
+            {x: 1, y: 0},
+            {x: 1, y: 11}
+        ];
+        const playerRandomOrder = players.map(p => p.id).sort();
+
         const localRobots = [];
         const localLasers = [];
         for(let i = 0; i < players.length; i++) {
             const robot = {
                 id: i,
-                x: 0,
-                y: i,
+                x: startingPositions[playerRandomOrder.indexOf(players[i].id)].x,
+                y: startingPositions[playerRandomOrder.indexOf(players[i].id)].y,
                 direction: 90, // N: 0, E: 90, S: 180, W: 270
                 hp: 10,
                 flags: 0,

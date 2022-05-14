@@ -2,7 +2,7 @@ const GameManager = require('./game-manager');
 const Constants = require('../frontend/src/util/constants');
 
 const gameId = '1'; // eventually random in URL... then a lot of params will need to be updated to consider multiple games simultaneously
-const maxPlayers = 6;
+const maxPlayers = 6; // It should actually be 8 :o add 2 more robots?
 
 let io;
 const players = new Map(); // key: socketId, value: name
