@@ -7,7 +7,8 @@ const maxPlayers = 6; // It should actually be 8 :o add 2 more robots?
 let io;
 const players = new Map(); // key: socketId, value: name
 
-const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire, sendVerifyCheckpoints);
+const gameManager = new GameManager(broadcastStatus, broadcastStatusFromServer, sendMove, sendNextRegister,
+    sendNextTurn, sendTurnEnd, sendRobotsFire, sendVerifyCheckpoints, startTimer);
 
 const clientConnected = (sio, client) => {
     io = sio;
@@ -130,6 +131,10 @@ function sendRobotsFire() {
 
 function sendVerifyCheckpoints() {
     io.sockets.in(gameId).emit(Constants.SOCKET_VERIFY_CHECKPOINTS);
+}
+
+function startTimer() {
+    io.sockets.in(gameId).emit(Constants.SOCKET_START_TIMER);
 }
 
 exports.clientConnected = clientConnected;

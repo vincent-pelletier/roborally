@@ -13,6 +13,7 @@ import Laser from './laser';
 import './mainpanel.css';
 import Robot from './robot';
 import RobotDetail from './robotdetail';
+import Timer from './timer';
 import Wall from './wall';
 
 const Constants = require('../util/constants');
@@ -36,6 +37,7 @@ const MainPanel = () => {
     const [cardsVisible, setCardsVisible] = useState(0);
     const [canDraw, setCanDraw] = useState(true);
     const [canChooseCards, setCanChooseCards] = useState(false);
+    const [timerSeconds, setTimerSeconds] = useState(-1);
 
     const [lastCardPlayed, setLastCardPlayed] = useState({id: 0, type: '', color: 'neutral'});
 
@@ -85,7 +87,7 @@ const MainPanel = () => {
     // - gears
     // - board lasers
     // 2.4. robots fire                     [x]
-    // be on checkpoint!
+    // be on checkpoint!                    [x]
 
     // Flow
     // client keeps state of game
@@ -150,8 +152,8 @@ const MainPanel = () => {
                 hp: 10,
                 flags: 0,
                 rebooting: false,
-                respawnX: 0,
-                respawnY: i,
+                respawnX: startingPositions[playerRandomOrder.indexOf(players[i].id)].x,
+                respawnY: startingPositions[playerRandomOrder.indexOf(players[i].id)].y,
                 respawnDirection: 90,
                 player: players[i]
             };
@@ -369,6 +371,7 @@ const MainPanel = () => {
 
         socket.on(Constants.SOCKET_NEXT_TURN, data => {
             nextTurn(data.turn);
+            setTimerSeconds(-1);
         });
 
         socket.on(Constants.SOCKET_ROBOTS_FIRE, () => {
@@ -385,6 +388,10 @@ const MainPanel = () => {
             setLastCardPlayed({id: 0, type: '', color: 'neutral'});
             // discard previous register?
             setCanDraw(true);
+        });
+
+        socket.on(Constants.SOCKET_START_TIMER, () => {
+            setTimerSeconds(30);
         });
 
         return () => {
@@ -431,7 +438,18 @@ const MainPanel = () => {
             setCardsVisible(0);
             socket.emit(Constants.SOCKET_SEND_REGISTER, {'register': reg});
         }
-    }
+    };
+
+    const onTimerEnd = () => {
+        if(canDraw) { // remove this if cards auto-draw
+            setDrawHand(true);
+            setAssignRandom(true);
+            setConfirmRegister(true);
+        } else if(canChooseCards) {
+            setAssignRandom(true);
+            setConfirmRegister(true);
+        }
+    };
 
     const [tempMove, setTempMove] = useState(false);
     // Combine these two useEffect to trigger the moves only once... not great.
@@ -514,7 +532,6 @@ const MainPanel = () => {
                                     break;
                             }
                             moveRobot(robot, x, y, robots.filter(r => r.id !== robot.id));
-
                             break;
                         case(Type.ROTATE_RIGHT):
                             robot.direction = (robot.direction + 90) % 360;
@@ -562,7 +579,7 @@ const MainPanel = () => {
                                 {positionX.map((x, i) => positionY.map((y, j) => <span className="grid-loc hidden" key={i*positionX.length + j} style={{top: y + 38 + "px", left: x - 11 + "px"}}>{x + "," + y}</span>))}
                             </div>
                             <div className="side">
-
+                                <Timer initialSeconds={timerSeconds} onTimerEnd={onTimerEnd}/>
                             </div>
                         </div>
                         <div>

@@ -327,7 +327,7 @@ const Deck = ({color, drawHand, onDrawHandComplete, discardHand, onDiscardHandCo
     return (
         <div className={"deck " + color}>
             {hand.map(c => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={(id) => false} clicked={cardClicked} visible={true}/>)}
-            &nbsp;|&nbsp;
+            {hand.length > 0 && register.length > 0 ? <span className="separator">→</span> : null}
             {register.map((c, i) => <Card key={c.id} card={c} selected={selectedCard} inRegister={inRegister} isLocked={isLocked} clicked={cardClicked} visible={i < cardsVisible}/>)}
         </div>
     );

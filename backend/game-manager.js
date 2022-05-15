@@ -10,7 +10,7 @@ class GameManager {
         H_END_TURN: 'H. End turn'
     };
 
-    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire, sendVerifyCheckpoints) {
+    constructor(playerBroadcast, serverBroadcast, sendMove, sendNextRegister, sendNextTurn, sendTurnEnd, sendRobotsFire, sendVerifyCheckpoints, startTimer) {
         this.playerBroadcast = playerBroadcast;
         this.serverBroadcast = serverBroadcast;
         this.sendMove = sendMove;
@@ -19,11 +19,13 @@ class GameManager {
         this.sendTurnEnd = sendTurnEnd;
         this.sendRobotsFire = sendRobotsFire;
         this.sendVerifyCheckpoints = sendVerifyCheckpoints;
+        this.startTimer = startTimer;
         this.setDefaults();
     }
 
     setDefaults() {
         this.turn = 1;
+        this.timerSentForTurn = 0;
         this.register = 1;
         this.players = [];
         this.registers = [];
@@ -63,6 +65,10 @@ class GameManager {
                     this.sendNextTurn({turn: this.turn});
                     this.stage = this.stages.B_BEGIN_REGISTER;
                     this.register = 1;
+                } else if(this.registers.length === 1 && this.timerSentForTurn < this.turn) {
+                    this.timerSentForTurn = this.turn;
+                    this.serverBroadcast('Choosing cards: 30s remaining...');
+                    this.startTimer();
                 }
                 break;
             case this.stages.B_BEGIN_REGISTER:

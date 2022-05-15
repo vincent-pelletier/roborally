@@ -4,3 +4,9 @@
     min-height: 115px;
     align-items: center;
 }
+
+.separator {
+    width: 50px;
+    text-align: center;
+    font-size: 50px;
+}
